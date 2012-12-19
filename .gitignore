@@ -15,3 +15,13 @@
 *.exe
 *.out
 *.app
+
+# Eclipse Project Files
+.autotools
+.cproject
+.project
+
+# Autotools output files
+autom4te.cache
+config.h.in
+configure
