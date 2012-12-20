@@ -10,6 +10,8 @@ AC_INIT([libjpeg], [8.0])
 # Directory where autotools helper scripts lives.
 AC_CONFIG_AUX_DIR([.])
 
+AC_CONFIG_MACRO_DIR([m4])
+
 # Generate configuration headers.
 AC_CONFIG_HEADERS([jconfig.h:jconfig.cfg])
 
@@ -61,7 +63,7 @@ VERS_2 {
         global: sym;
 } VERS_1;
 EOF
-  AC_LINK_IFELSE(AC_LANG_PROGRAM([], []),
+  AC_LINK_IFELSE([AC_LANG_PROGRAM([], [])],
                  [have_ld_version_script=yes], [have_ld_version_script=no])
   rm -f conftest.map
   LDFLAGS="$save_LDFLAGS"

@@ -1,5 +1,12 @@
+.deps
+Makefile
+Makefile.in
+m4
 aclocal.m4
 autom4te.cache
 configure
 jconfig.cfg
-Makefile.in
+jconfig.h
+libtool
+ltmain.sh
+stamp-h1
