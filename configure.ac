@@ -1,7 +1,7 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-AC_PREREQ([2.69])
+AC_PREREQ([2.68])
 AC_INIT([meterpreter], [4.5.0], [https://github.com/rapid7/meterpreter/issues])
 AC_CONFIG_AUX_DIR([.])
 AC_CONFIG_SRCDIR([source/bionic/libc/arch-arm/bionic/eabi.c])
@@ -68,7 +68,6 @@ AC_CHECK_HEADERS([arpa/inet.h \
 		  wchar.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
-AC_CHECK_HEADER_STDBOOL
 AC_TYPE_UID_T
 AC_C_INLINE
 AC_TYPE_INT16_T
