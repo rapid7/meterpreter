@@ -507,7 +507,7 @@ DWORD request_railgun_api( Remote * pRemote, Packet * pPacket )
 		// Get cpCallConv
 		rInput.cpCallConv = packet_get_tlv_value_string( pPacket, TLV_TYPE_RAILGUN_CALLCONV );
 		if( !rInput.cpCallConv )
-			BREAK_WITH_ERROR( "[RAILGUN] request_railgun_api: Could not get TLV_TYPE_RAILGUN_FUNCNAME", ERROR_INVALID_PARAMETER );
+			BREAK_WITH_ERROR( "[RAILGUN] request_railgun_api: Could not get TLV_TYPE_RAILGUN_CALLCONV", ERROR_INVALID_PARAMETER );
 
 		// get the pStack-description (1 ULONG_PTR description, 1 ULONG_PTR data)
 		if( packet_get_tlv( pPacket, TLV_TYPE_RAILGUN_STACKBLOB, &rInput.pStackDescriptorTlv ) != ERROR_SUCCESS)
