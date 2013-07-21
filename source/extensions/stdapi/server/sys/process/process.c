@@ -532,17 +532,12 @@ DWORD request_sys_process_execute(Remote *remote, Packet *packet)
 			packet_add_tlv_uint(response, TLV_TYPE_PID, pi.dwProcessId);
 
 			packet_add_tlv_uint(response, TLV_TYPE_PROCESS_HANDLE,(DWORD)pi.hProcess);
-
+			packet_add_tlv_uint(response, TLV_TYPE_HANDLE_IN,(DWORD)in[0]);
+			packet_add_tlv_uint(response, TLV_TYPE_HANDLE_OUT,(DWORD)out[1]);
 			CloseHandle(pi.hThread);
 		}
 
 	} while (0);
-
-	// Close the read side of stdin and the write side of stdout
-	if (in[0])
-		CloseHandle(in[0]);
-	if (out[1])
-		CloseHandle(out[1]);
 
 	// Free the command line if necessary
 	if (path && arguments && commandLine)
@@ -745,13 +740,13 @@ DWORD request_sys_process_execute(Remote *remote, Packet *packet)
 			dprintf("child pid is %d\n", pid);
 			packet_add_tlv_uint(response, TLV_TYPE_PID, (DWORD)pid);
 			packet_add_tlv_uint(response, TLV_TYPE_PROCESS_HANDLE, (DWORD)pid);
+			packet_add_tlv_uint(response, TLV_TYPE_HANDLE_IN,(DWORD)in[0]);
+			packet_add_tlv_uint(response, TLV_TYPE_HANDLE_OUT,(DWORD)out[1]);
 			if (flags & PROCESS_EXECUTE_FLAG_CHANNELIZED) {
 				if(have_pty) {
 					dprintf("child channelized\n");
 					close(slave);
 				} else {
-					close(in[0]);
-					close(out[1]);
 					close(out[2]);
 				}
 			}
