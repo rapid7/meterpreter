@@ -164,12 +164,6 @@
     <ResourceCompile>
       <Culture>0x0409</Culture>
     </ResourceCompile>
-    <PostBuildEvent>
-      <Command>IF EXIST "$(ProjectDir)..\..\output\$(PlatformShortName)\Debug\" GOTO COPY
-    mkdir "$(ProjectDir)..\..\output\$(PlatformShortName)\Debug\"
-:COPY
-copy /y "$(TargetDir)$(TargetFileName)" "$(ProjectDir)..\..\output\$(PlatformShortName)\Debug\"</Command>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='r7_debug|Win32'">
     <ClCompile>
@@ -198,12 +192,6 @@ copy /y "$(TargetDir)$(TargetFileName)" "$(ProjectDir)..\..\output\$(PlatformSho
     <ResourceCompile>
       <Culture>0x0409</Culture>
     </ResourceCompile>
-    <PostBuildEvent>
-      <Command>IF EXIST "$(ProjectDir)..\..\output\$(PlatformShortName)\Debug\" GOTO COPY
-    mkdir "$(ProjectDir)..\..\output\$(PlatformShortName)\Debug\"
-:COPY
-copy /y "$(TargetDir)$(TargetFileName)" "$(ProjectDir)..\..\output\$(PlatformShortName)\Debug\"</Command>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Midl>
@@ -233,12 +221,6 @@ copy /y "$(TargetDir)$(TargetFileName)" "$(ProjectDir)..\..\output\$(PlatformSho
     <ResourceCompile>
       <Culture>0x0409</Culture>
     </ResourceCompile>
-    <PostBuildEvent>
-      <Command>IF EXIST "$(ProjectDir)..\..\output\$(PlatformShortName)\Debug\" GOTO COPY
-    mkdir "$(ProjectDir)..\..\output\$(PlatformShortName)\Debug\"
-:COPY
-copy /y "$(TargetDir)$(TargetFileName)" "$(ProjectDir)..\..\output\$(PlatformShortName)\Debug\"</Command>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='r7_debug|x64'">
     <Midl>
@@ -268,12 +250,6 @@ copy /y "$(TargetDir)$(TargetFileName)" "$(ProjectDir)..\..\output\$(PlatformSho
     <ResourceCompile>
       <Culture>0x0409</Culture>
     </ResourceCompile>
-    <PostBuildEvent>
-      <Command>IF EXIST "$(ProjectDir)..\..\output\$(PlatformShortName)\Debug\" GOTO COPY
-    mkdir "$(ProjectDir)..\..\output\$(PlatformShortName)\Debug\"
-:COPY
-copy /y "$(TargetDir)$(TargetFileName)" "$(ProjectDir)..\..\output\$(PlatformShortName)\Debug\"</Command>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -302,12 +278,6 @@ copy /y "$(TargetDir)$(TargetFileName)" "$(ProjectDir)..\..\output\$(PlatformSho
     <ResourceCompile>
       <Culture>0x0409</Culture>
     </ResourceCompile>
-    <PostBuildEvent>
-      <Command>IF EXIST "$(ProjectDir)..\..\output\$(PlatformShortName)\" GOTO COPY
-    mkdir "$(ProjectDir)..\..\output\$(PlatformShortName)\"
-:COPY
-copy /y "$(TargetDir)$(TargetFileName)" "$(ProjectDir)..\..\output\$(PlatformShortName)\"</Command>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='r7_release|Win32'">
     <ClCompile>
@@ -336,12 +306,6 @@ copy /y "$(TargetDir)$(TargetFileName)" "$(ProjectDir)..\..\output\$(PlatformSho
     <ResourceCompile>
       <Culture>0x0409</Culture>
     </ResourceCompile>
-    <PostBuildEvent>
-      <Command>IF EXIST "$(ProjectDir)..\..\output\$(PlatformShortName)\" GOTO COPY
-    mkdir "$(ProjectDir)..\..\output\$(PlatformShortName)\"
-:COPY
-copy /y "$(TargetDir)$(TargetFileName)" "$(ProjectDir)..\..\output\$(PlatformShortName)\"</Command>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Midl>
@@ -371,12 +335,6 @@ copy /y "$(TargetDir)$(TargetFileName)" "$(ProjectDir)..\..\output\$(PlatformSho
     <ResourceCompile>
       <Culture>0x0409</Culture>
     </ResourceCompile>
-    <PostBuildEvent>
-      <Command>IF EXIST "$(ProjectDir)..\..\output\$(PlatformShortName)\" GOTO COPY
-    mkdir "$(ProjectDir)..\..\output\$(PlatformShortName)\"
-:COPY
-copy /y "$(TargetDir)$(TargetFileName)" "$(ProjectDir)..\..\output\$(PlatformShortName)\"</Command>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='r7_release|x64'">
     <Midl>
@@ -406,12 +364,6 @@ copy /y "$(TargetDir)$(TargetFileName)" "$(ProjectDir)..\..\output\$(PlatformSho
     <ResourceCompile>
       <Culture>0x0409</Culture>
     </ResourceCompile>
-    <PostBuildEvent>
-      <Command>IF EXIST "$(ProjectDir)..\..\output\$(PlatformShortName)\" GOTO COPY
-    mkdir "$(ProjectDir)..\..\output\$(PlatformShortName)\"
-:COPY
-copy /y "$(TargetDir)$(TargetFileName)" "$(ProjectDir)..\..\output\$(PlatformShortName)\"</Command>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\source\common\args.c">
