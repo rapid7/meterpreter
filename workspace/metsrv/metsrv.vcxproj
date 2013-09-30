@@ -187,10 +187,10 @@
     </Bscmake>
     <PostBuildEvent>
       <Command>editbin.exe /OSVERSION:5.0 /SUBSYSTEM:WINDOWS,4.0 "$(TargetDir)$(TargetFileName)"
-IF EXIST "$(ProjectDir)..\..\output\$(PlatformShortName)\Debug\" GOTO COPY
-    mkdir "$(ProjectDir)..\..\output\$(PlatformShortName)\Debug\"
+IF EXIST "$(ProjectDir)..\..\output\Debug\" GOTO COPY
+    mkdir "$(ProjectDir)..\..\output\Debug\"
 :COPY
-copy /y "$(TargetDir)$(TargetFileName)" "$(ProjectDir)..\..\output\$(PlatformShortName)\Debug\"</Command>
+copy /y "$(TargetDir)$(TargetFileName)" "$(ProjectDir)..\..\output\Debug\"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='r7_debug|Win32'">
@@ -242,10 +242,10 @@ copy /y "$(TargetDir)$(TargetFileName)" "$(ProjectDir)..\..\output\$(PlatformSho
     </Bscmake>
     <PostBuildEvent>
       <Command>editbin.exe /OSVERSION:5.0 /SUBSYSTEM:WINDOWS,4.0 "$(TargetDir)$(TargetFileName)"
-IF EXIST "$(ProjectDir)..\..\output\$(PlatformShortName)\Debug\" GOTO COPY
-    mkdir "$(ProjectDir)..\..\output\$(PlatformShortName)\Debug\"
+IF EXIST "$(ProjectDir)..\..\output\Debug\" GOTO COPY
+    mkdir "$(ProjectDir)..\..\output\Debug\"
 :COPY
-copy /y "$(TargetDir)$(TargetFileName)" "$(ProjectDir)..\..\output\$(PlatformShortName)\Debug\"</Command>
+copy /y "$(TargetDir)$(TargetFileName)" "$(ProjectDir)..\..\output\Debug\"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -298,10 +298,10 @@ copy /y "$(TargetDir)$(TargetFileName)" "$(ProjectDir)..\..\output\$(PlatformSho
     </Bscmake>
     <PostBuildEvent>
       <Command>editbin.exe /OSVERSION:5.0 /SUBSYSTEM:WINDOWS,4.0 "$(TargetDir)$(TargetFileName)"
-IF EXIST "$(ProjectDir)..\..\output\$(PlatformShortName)\Debug\" GOTO COPY
-    mkdir "$(ProjectDir)..\..\output\$(PlatformShortName)\Debug\"
+IF EXIST "$(ProjectDir)..\..\output\Debug\" GOTO COPY
+    mkdir "$(ProjectDir)..\..\output\Debug\"
 :COPY
-copy /y "$(TargetDir)$(TargetFileName)" "$(ProjectDir)..\..\output\$(PlatformShortName)\Debug\"</Command>
+copy /y "$(TargetDir)$(TargetFileName)" "$(ProjectDir)..\..\output\Debug\"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='r7_debug|x64'">
@@ -354,10 +354,10 @@ copy /y "$(TargetDir)$(TargetFileName)" "$(ProjectDir)..\..\output\$(PlatformSho
     </Bscmake>
     <PostBuildEvent>
       <Command>editbin.exe /OSVERSION:5.0 /SUBSYSTEM:WINDOWS,4.0 "$(TargetDir)$(TargetFileName)"
-IF EXIST "$(ProjectDir)..\..\output\$(PlatformShortName)\Debug\" GOTO COPY
-    mkdir "$(ProjectDir)..\..\output\$(PlatformShortName)\Debug\"
+IF EXIST "$(ProjectDir)..\..\output\Debug\" GOTO COPY
+    mkdir "$(ProjectDir)..\..\output\Debug\"
 :COPY
-copy /y "$(TargetDir)$(TargetFileName)" "$(ProjectDir)..\..\output\$(PlatformShortName)\Debug\"</Command>
+copy /y "$(TargetDir)$(TargetFileName)" "$(ProjectDir)..\..\output\Debug\"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -418,10 +418,10 @@ copy /y "$(TargetDir)$(TargetFileName)" "$(ProjectDir)..\..\output\$(PlatformSho
     </Bscmake>
     <PostBuildEvent>
       <Command>editbin.exe /OSVERSION:5.0 /SUBSYSTEM:WINDOWS,4.0 "$(TargetDir)$(TargetFileName)"
-IF EXIST "$(ProjectDir)..\..\output\$(PlatformShortName)\" GOTO COPY
-    mkdir "$(ProjectDir)..\..\output\$(PlatformShortName)\"
+IF EXIST "$(ProjectDir)..\..\output\" GOTO COPY
+    mkdir "$(ProjectDir)..\..\output\"
 :COPY
-copy /y "$(TargetDir)$(TargetFileName)" "$(ProjectDir)..\..\output\$(PlatformShortName)\"</Command>
+copy /y "$(TargetDir)$(TargetFileName)" "$(ProjectDir)..\..\output\"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='r7_release|Win32'">
@@ -482,10 +482,10 @@ copy /y "$(TargetDir)$(TargetFileName)" "$(ProjectDir)..\..\output\$(PlatformSho
     </Bscmake>
     <PostBuildEvent>
       <Command>editbin.exe /OSVERSION:5.0 /SUBSYSTEM:WINDOWS,4.0 "$(TargetDir)$(TargetFileName)"
-IF EXIST "$(ProjectDir)..\..\output\$(PlatformShortName)\" GOTO COPY
-    mkdir "$(ProjectDir)..\..\output\$(PlatformShortName)\"
+IF EXIST "$(ProjectDir)..\..\output\" GOTO COPY
+    mkdir "$(ProjectDir)..\..\output\"
 :COPY
-copy /y "$(TargetDir)$(TargetFileName)" "$(ProjectDir)..\..\output\$(PlatformShortName)\"</Command>
+copy /y "$(TargetDir)$(TargetFileName)" "$(ProjectDir)..\..\output\"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -544,10 +544,10 @@ copy /y "$(TargetDir)$(TargetFileName)" "$(ProjectDir)..\..\output\$(PlatformSho
     </Bscmake>
     <PostBuildEvent>
       <Command>editbin.exe /OSVERSION:5.0 /SUBSYSTEM:WINDOWS,4.0 "$(TargetDir)$(TargetFileName)"
-IF EXIST "$(ProjectDir)..\..\output\$(PlatformShortName)\" GOTO COPY
-    mkdir "$(ProjectDir)..\..\output\$(PlatformShortName)\"
+IF EXIST "$(ProjectDir)..\..\output\" GOTO COPY
+    mkdir "$(ProjectDir)..\..\output\"
 :COPY
-copy /y "$(TargetDir)$(TargetFileName)" "$(ProjectDir)..\..\output\$(PlatformShortName)\"</Command>
+copy /y "$(TargetDir)$(TargetFileName)" "$(ProjectDir)..\..\output\"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='r7_release|x64'">
@@ -606,10 +606,10 @@ copy /y "$(TargetDir)$(TargetFileName)" "$(ProjectDir)..\..\output\$(PlatformSho
     </Bscmake>
     <PostBuildEvent>
       <Command>editbin.exe /OSVERSION:5.0 /SUBSYSTEM:WINDOWS,4.0 "$(TargetDir)$(TargetFileName)"
-IF EXIST "$(ProjectDir)..\..\output\$(PlatformShortName)\" GOTO COPY
-    mkdir "$(ProjectDir)..\..\output\$(PlatformShortName)\"
+IF EXIST "$(ProjectDir)..\..\output\" GOTO COPY
+    mkdir "$(ProjectDir)..\..\output\"
 :COPY
-copy /y "$(TargetDir)$(TargetFileName)" "$(ProjectDir)..\..\output\$(PlatformShortName)\"</Command>
+copy /y "$(TargetDir)$(TargetFileName)" "$(ProjectDir)..\..\output\"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
