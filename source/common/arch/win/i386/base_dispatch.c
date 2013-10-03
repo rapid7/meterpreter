@@ -195,11 +195,12 @@ DWORD remote_request_core_migrate( Remote * remote, Packet * packet )
 		thread_sigterm( serverThread );
 */
 
-		// Signal the main server thread to begin the shutdown as migration has been successfull.
+		// Signal the main server thread to begin the shutdown as migration has been successful.
 		// If the thread is not killed, the pending packet_receive prevents the new process
-		// from being able to negotiate SSL.
+		// from being able to negotiate SSL. Using thread_kill instead of thread_sigterm here
+		// results in the process not exiting properly/cleanly on Windows >= 7.
 		dprintf("[MIGRATE] Shutting down the Meterpreter thread 1 (killing the main thread)...");
-		thread_kill( serverThread );
+		thread_sigterm( serverThread );
 
 		// Wait at most 15 seconds for the event to be set letting us know that it's finished
 		// Unfortunately, its too late to do anything about a failure at this point
