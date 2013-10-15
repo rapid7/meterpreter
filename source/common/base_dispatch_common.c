@@ -637,7 +637,9 @@ DWORD remote_request_core_shutdown(Remote *remote, Packet *packet)
 #ifdef _WIN32
 // see note about posix above - egypt
 	dprintf("[SHUTDOWN] Shutting down the Meterpreter thread 1 (killing the main thread)...");
-	thread_kill( serverThread );
+	// Using thread_kill instead of thread_sigterm here results in the process not exiting
+	// properly/cleanly on Windows >= 7.
+	thread_sigterm( serverThread );
 #endif
 	return result;
 }
