@@ -159,7 +159,7 @@ int try_open_pty(int *master, int *slave)
 DWORD request_sys_process_execute(Remote *remote, Packet *packet)
 {
 	Packet *response = packet_create_response(packet);
-	DWORD result = ERROR_SUCCESS;
+	DWORD dwResult = ERROR_SUCCESS;
 	Tlv inMemoryData;
 	BOOL doInMemory = FALSE;
 #ifdef _WIN32
@@ -237,7 +237,7 @@ DWORD request_sys_process_execute(Remote *remote, Packet *packet)
 
 			if (!(commandLine = (PCHAR)malloc(commandLineLength)))
 			{
-				result = ERROR_NOT_ENOUGH_MEMORY;
+				dwResult = ERROR_NOT_ENOUGH_MEMORY;
 				break;
 			}
 
@@ -247,7 +247,7 @@ DWORD request_sys_process_execute(Remote *remote, Packet *packet)
 			commandLine = path;
 		else
 		{
-			result = ERROR_INVALID_PARAMETER;
+			dwResult = ERROR_INVALID_PARAMETER;
 			break;
 		}
 
@@ -263,7 +263,7 @@ DWORD request_sys_process_execute(Remote *remote, Packet *packet)
 			// Allocate the channel context
 			if (!(ctx = (ProcessChannelContext *)malloc(sizeof(ProcessChannelContext))))
 			{
-				result = ERROR_NOT_ENOUGH_MEMORY;
+				dwResult = ERROR_NOT_ENOUGH_MEMORY;
 				break;
 			}
 
@@ -279,7 +279,7 @@ DWORD request_sys_process_execute(Remote *remote, Packet *packet)
 			// Allocate the pool channel
 			if (!(newChannel = channel_create_pool(0, CHANNEL_FLAG_SYNCHRONOUS, &chops)))
 			{
-				result = ERROR_NOT_ENOUGH_MEMORY;
+				dwResult = ERROR_NOT_ENOUGH_MEMORY;
 				break;
 			}
 
@@ -295,7 +295,7 @@ DWORD request_sys_process_execute(Remote *remote, Packet *packet)
 
 				free(ctx);
 
-				result = GetLastError();
+				dwResult = GetLastError();
 				break;
 			}
 
@@ -346,8 +346,8 @@ DWORD request_sys_process_execute(Remote *remote, Packet *packet)
 			{
 				if (!DuplicateTokenEx(token, TOKEN_ALL_ACCESS, NULL, SecurityImpersonation, TokenPrimary, &pToken))
 				{
-					result = GetLastError();
-					dprintf("[execute] failed to duplicate token 0x%.8x", result);
+					dwResult = GetLastError();
+					dprintf("[execute] failed to duplicate token 0x%.8x", dwResult);
 					break;
 				}
 			}
@@ -368,17 +368,19 @@ DWORD request_sys_process_execute(Remote *remote, Packet *packet)
 			if( !CreateProcessAsUser( pToken, NULL, commandLine, NULL, NULL, inherit, createFlags, pEnvironment, NULL, &si, &pi ) )
 			{
 				LPCREATEPROCESSWITHTOKENW pCreateProcessWithTokenW = NULL;
-				HANDLE hAdvapi32   = NULL;
+				HMODULE hAdvapi32   = NULL;
 				wchar_t * wcmdline = NULL;
 				wchar_t * wdesktop = NULL;
 				int size           = 0;
 
-				result = GetLastError();
+				dwResult = GetLastError();
 
 				// sf: If we hit an ERROR_PRIVILEGE_NOT_HELD failure we can fall back to CreateProcessWithTokenW but this is only
 				// available on 2003/Vista/2008/7. CreateProcessAsUser() seems to be just borked on some systems IMHO.
-				if( result == ERROR_PRIVILEGE_NOT_HELD )
+				if( dwResult == ERROR_PRIVILEGE_NOT_HELD )
 				{
+					dprintf("[execute] failed to call CreateProcessAsUser. dwResult: ERROR_PRIVILEGE_NOT_HELD");
+
 					do
 					{
 						hAdvapi32 = LoadLibrary( "advapi32.dll" );
@@ -386,8 +388,10 @@ DWORD request_sys_process_execute(Remote *remote, Packet *packet)
 							break;
 
 						pCreateProcessWithTokenW = (LPCREATEPROCESSWITHTOKENW)GetProcAddress( hAdvapi32, "CreateProcessWithTokenW" );
-						if( !pCreateProcessWithTokenW )
+						if( !pCreateProcessWithTokenW ) {
+							dprintf( "Unable to find CreateProcessWithTokenW" );
 							break;
+						}
 
 						// convert the multibyte inputs to wide strings (No CreateProcessWithTokenA available unfortunatly)...
 						size = mbstowcs( NULL, commandLine, 0 );
@@ -410,17 +414,27 @@ DWORD request_sys_process_execute(Remote *remote, Packet *packet)
 
 						if( !pCreateProcessWithTokenW( pToken, LOGON_NETCREDENTIALS_ONLY, NULL, wcmdline, createFlags, pEnvironment, NULL, (LPSTARTUPINFOW)&si, &pi ) )
 						{
-							result = GetLastError();
-							dprintf("[execute] failed to create the new process via CreateProcessWithTokenW 0x%.8x", result);
+							dwResult = GetLastError();
+							dprintf("[execute] failed to create the new process via CreateProcessWithTokenW 0x%.8x", dwResult);
 							break;
 						}
 
-						result = ERROR_SUCCESS;
+						dwResult = ERROR_SUCCESS;
 
 					} while( 0 );
 
 					if( hAdvapi32 )
 						FreeLibrary( hAdvapi32 );
+
+					if( dwResult == ERROR_PRIVILEGE_NOT_HELD &&  flags & PROCESS_EXECUTE_FLAG_FORCE  ) {
+						dprintf( "[EXECUTE] FORCE specified, falling back to plain ol' CreateProcess" );
+
+						if( !CreateProcess( NULL, commandLine, NULL, NULL, inherit, createFlags, pEnvironment, NULL, &si, &pi ) ) {
+							dprintf( "[EXECUTE] CreateProcess failed, giving up" );
+						} else {
+							dwResult = ERROR_SUCCESS;
+						}
+					}
 
 					if( wdesktop )
 						free( wdesktop );
@@ -430,9 +444,11 @@ DWORD request_sys_process_execute(Remote *remote, Packet *packet)
 				}
 				else
 				{
-					dprintf("[execute] failed to create the new process via CreateProcessAsUser 0x%.8x", result);
+					dprintf("[execute] failed to create the new process via CreateProcessAsUser 0x%.8x", dwResult);
 					break;
 				}
+			} else {
+				dprintf( "[EXECUTE] Successfully created process. Apparently" );
 			}
 
 			if( lpfnDestroyEnvironmentBlock && pEnvironment )
@@ -448,7 +464,6 @@ DWORD request_sys_process_execute(Remote *remote, Packet *packet)
 			HANDLE hToken     = NULL;
 			HMODULE hWtsapi32 = NULL;
 			BOOL bSuccess     = FALSE;
-			DWORD dwResult    = ERROR_SUCCESS;
 
 			do
 			{
@@ -483,9 +498,7 @@ DWORD request_sys_process_execute(Remote *remote, Packet *packet)
 			if( hToken )
 				CloseHandle( hToken );
 
-			result = dwResult;
-
-			if( result != ERROR_SUCCESS )
+			if( dwResult != ERROR_SUCCESS )
 				break;
 		}
 		else
@@ -493,7 +506,7 @@ DWORD request_sys_process_execute(Remote *remote, Packet *packet)
 			// Try to execute the process
 			if (!CreateProcess(NULL, commandLine, NULL, NULL, inherit, createFlags, NULL, NULL, &si, &pi))
 			{
-				result = GetLastError();
+				dwResult = GetLastError();
 				break;
 			}
 		}
@@ -509,7 +522,7 @@ DWORD request_sys_process_execute(Remote *remote, Packet *packet)
 			//
 			if (!MapNewExecutableRegionInProcess( pi.hProcess, pi.hThread, inMemoryData.buffer))
 			{
-				result = GetLastError();
+				dwResult = GetLastError();
 				break;
 			}
 
@@ -518,7 +531,7 @@ DWORD request_sys_process_execute(Remote *remote, Packet *packet)
 			//
 			if (ResumeThread(pi.hThread) == (DWORD)-1)
 			{
-				result = GetLastError();
+				dwResult = GetLastError();
 				break;
 			}
 
@@ -526,7 +539,7 @@ DWORD request_sys_process_execute(Remote *remote, Packet *packet)
 
 		// check for failure here otherwise we can get a case where we 
 		// failed but return a process id and this will throw off the ruby side.
-		if( result == ERROR_SUCCESS )
+		if( dwResult == ERROR_SUCCESS )
 		{
 			// Add the process identifier to the response packet
 			packet_add_tlv_uint(response, TLV_TYPE_PID, pi.dwProcessId);
@@ -540,13 +553,13 @@ DWORD request_sys_process_execute(Remote *remote, Packet *packet)
 
 	// Close the read side of stdin and the write side of stdout
 	if (in[0])
-		CloseHandle(in[0]);
+		CloseHandle( in[0] );
 	if (out[1])
-		CloseHandle(out[1]);
+		CloseHandle( out[1] );
 
 	// Free the command line if necessary
-	if (path && arguments && commandLine)
-		free(commandLine);
+	if ( path && arguments && commandLine )
+		free( commandLine );
 
 	if( cpDesktop )
 		free( cpDesktop );
@@ -618,7 +631,7 @@ DWORD request_sys_process_execute(Remote *remote, Packet *packet)
 			// Allocate the channel context
 			if (!(ctx = (ProcessChannelContext *)malloc(sizeof(ProcessChannelContext))))
 			{
-				result = ERROR_NOT_ENOUGH_MEMORY;
+				dwResult = ERROR_NOT_ENOUGH_MEMORY;
 				break;
 			}
 
@@ -634,7 +647,7 @@ DWORD request_sys_process_execute(Remote *remote, Packet *packet)
 			// Allocate the pool channel
 			if (!(newChannel = channel_create_pool(0, CHANNEL_FLAG_SYNCHRONOUS, &chops)))
 			{
-				result = ERROR_NOT_ENOUGH_MEMORY;
+				dwResult = ERROR_NOT_ENOUGH_MEMORY;
 				break;
 			}
 
@@ -658,7 +671,7 @@ DWORD request_sys_process_execute(Remote *remote, Packet *packet)
 
 					free(ctx);
 
-					result = GetLastError();
+					dwResult = GetLastError();
 					break;
 				}
 
@@ -679,7 +692,7 @@ DWORD request_sys_process_execute(Remote *remote, Packet *packet)
 				// XXX This is possible, due to chroots etc. We could close
 				// fd 0/1/2 and hope the program isn't buggy.
  
-				result = GetLastError();
+				dwResult = GetLastError();
 				break;
 			}
 		}
@@ -694,7 +707,7 @@ DWORD request_sys_process_execute(Remote *remote, Packet *packet)
 		switch(pid) {
 
 		case -1:
-			result = errno;
+			dwResult = errno;
 			break;
 
 		case 0:
@@ -760,7 +773,7 @@ DWORD request_sys_process_execute(Remote *remote, Packet *packet)
 	} while(0);
 #endif
 
-	packet_transmit_response(result, remote, response);
+	packet_transmit_response( dwResult, remote, response );
 
 	return ERROR_SUCCESS;
 }
