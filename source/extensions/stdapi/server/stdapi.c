@@ -121,6 +121,10 @@ Command customCommands[] =
 	COMMAND_REQ( "stdapi_net_config_get_netstat", request_net_config_get_netstat ),
 
 #ifdef WIN32
+	{ "stdapi_net_config_get_proxy",
+	  { request_net_config_get_proxy_config,			  { 0 }, 0 },
+	  { EMPTY_DISPATCH_HANDLER                                     },
+	},
 	// Resolve
 	COMMAND_REQ( "stdapi_net_resolve_host", request_resolve_host ),
 	COMMAND_REQ( "stdapi_net_resolve_hosts", request_resolve_hosts ),
