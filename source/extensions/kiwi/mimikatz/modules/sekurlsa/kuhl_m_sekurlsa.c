@@ -315,6 +315,9 @@ NTSTATUS kuhl_m_sekurlsa_enum(PKUHL_M_SEKURLSA_ENUM callback, LPVOID pOptionalDa
 		else
 			helper = &lsassEnumHelpers[6];
 
+		if((cLsass.osContext.BuildNumber >= KULL_M_WIN_MIN_BUILD_7) && (cLsass.osContext.BuildNumber < KULL_M_WIN_MIN_BUILD_BLUE) && (kuhl_m_sekurlsa_msv_package.Module.Informations.TimeDateStamp > 0x53480000))
+			helper++;
+
 		securityStruct.hMemory = cLsass.hLsassMem;
 		securityStruct.address = LogonSessionListCount;
 		
