@@ -31,6 +31,7 @@ Command customCommands[] =
 	COMMAND_REQ("stdapi_railgun_memwrite", request_railgun_memwrite),
 #endif
 
+#ifndef _DARWIN
 	// Fs
 	COMMAND_REQ("stdapi_fs_ls", request_fs_ls),
 	COMMAND_REQ("stdapi_fs_getwd", request_fs_getwd),
@@ -47,7 +48,9 @@ Command customCommands[] =
 #ifdef _WIN32
 	COMMAND_REQ("stdapi_fs_search", request_fs_search),
 #endif
+#endif
 
+#ifndef _DARWIN
 	// Process
 	COMMAND_REQ("stdapi_sys_process_attach", request_sys_process_attach),
 	COMMAND_REQ("stdapi_sys_process_close", request_sys_process_close),
@@ -57,6 +60,7 @@ Command customCommands[] =
 	COMMAND_REQ("stdapi_sys_process_getpid", request_sys_process_getpid),
 	COMMAND_REQ("stdapi_sys_process_get_info", request_sys_process_get_info),
 	COMMAND_REQ("stdapi_sys_process_wait", request_sys_process_wait),
+#endif
 
 #ifdef _WIN32
 	// Image
@@ -114,6 +118,7 @@ Command customCommands[] =
 	COMMAND_REQ("stdapi_sys_config_drop_token", request_sys_config_drop_token),
 #endif
 
+#ifndef _DARWIN
 	// Net
 	COMMAND_REQ("stdapi_net_config_get_routes", request_net_config_get_routes),
 	COMMAND_REQ("stdapi_net_config_add_route", request_net_config_add_route),
@@ -121,6 +126,7 @@ Command customCommands[] =
 	COMMAND_REQ("stdapi_net_config_get_interfaces", request_net_config_get_interfaces),
 	COMMAND_REQ("stdapi_net_config_get_arp_table", request_net_config_get_arp_table),
 	COMMAND_REQ("stdapi_net_config_get_netstat", request_net_config_get_netstat),
+#endif
 
 #ifdef WIN32
 	// Proxy
@@ -130,8 +136,10 @@ Command customCommands[] =
 	COMMAND_REQ("stdapi_net_resolve_hosts", request_resolve_hosts),
 #endif
 
+#ifndef _DARWIN
 	// Socket
 	COMMAND_REQ("stdapi_net_socket_tcp_shutdown", request_net_socket_tcp_shutdown),
+#endif
 
 #ifdef _WIN32
 	// UI

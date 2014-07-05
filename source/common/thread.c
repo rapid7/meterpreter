@@ -11,6 +11,21 @@ int __futex_wake(volatile void *ftx, int count);
 
 #endif
 
+#ifdef _DARWIN
+#define FUTEX_WAIT 0
+#define FUTEX_WAKE 1
+
+int __futex_wait(volatile void *ftx, int val, const struct timespec *timeout)
+{
+//    return futex((int*)ftx, FUTEX_WAIT, val, timeout, NULL, 0);
+}
+
+int __futex_wake(volatile void *ftx, int count)
+{
+//    return futex((int*)ftx, FUTEX_WAKE, count, NULL, NULL, 0);
+}
+#endif
+
 // thread.c contains wrappers for the primitives of locks, events and threads for use in 
 // the multithreaded meterpreter. This is the win32/win64 implementation.
 
@@ -266,8 +281,11 @@ THREAD * thread_open( VOID )
 	if( thread != NULL )
 	{
 		memset( thread, 0, sizeof(THREAD) );
-
+#ifdef _DARWIN
+		pthread_threadid_np(NULL, &thread->id);
+#else
 		thread->id      = gettid();
+#endif
 		thread->sigterm = event_create();
 		thread->pid	= pthread_self();
 	}
@@ -304,7 +322,12 @@ void *__paused_thread(void *req)
 	THREAD *thread;
 
 	struct thread_conditional *tc = (struct thread_conditional *)(req);
-	tc->thread->id = gettid();
+	
+#ifdef _DARWIN
+		pthread_threadid_np(NULL, &tc->thread->id);
+#else
+		tc->thread->id      = gettid();
+#endif
 
 	signal(SIGTERM, __thread_cancelled);
 

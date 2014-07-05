@@ -49,7 +49,17 @@ DWORD request_core_loadlib(Remote *remote, Packet *packet)
 
 		dprintf("targetPath: %s", targetPath);
 
+#ifdef _DARWIN
+		FILE *file = fopen(targetPath,"w");
+		int i;
+		for (i=0; i<dataTlv.header.length; i++)
+			fprintf(file, "%c", ((char*)dataTlv.buffer)[i]);
+		fclose(file);
+
+		library = dlopen(targetPath, RTLD_LAZY);
+#else
 		library = dlopenbuf(targetPath, dataTlv.buffer, dataTlv.header.length);
+#endif
 		dprintf("dlopenbuf(%s): %08x / %s", targetPath, library, dlerror());
 		if (!library)
 		{

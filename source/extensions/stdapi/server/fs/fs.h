@@ -46,9 +46,11 @@ struct meterp_stat {
      * These are always 64-bits on Windows and usually 32-bits on Linux.  Force
      * them to be the same size everywhere.
      */
+#ifndef _DARWIN
     unsigned long long st_atime;
     unsigned long long st_mtime;
     unsigned long long st_ctime;
+#endif
 };
 
 int fs_stat(LPCSTR filename, struct meterp_stat *buf);

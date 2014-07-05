@@ -10,7 +10,7 @@ typedef BOOL (STDMETHODCALLTYPE FAR * LPFNCREATEENVIRONMENTBLOCK)( LPVOID  *lpEn
 typedef BOOL (STDMETHODCALLTYPE FAR * LPFNDESTROYENVIRONMENTBLOCK) ( LPVOID lpEnvironment );
 typedef BOOL (WINAPI * LPCREATEPROCESSWITHTOKENW)( HANDLE, DWORD, LPCWSTR, LPWSTR, DWORD, LPVOID, LPCWSTR, LPSTARTUPINFOW, LPPROCESS_INFORMATION );
 
-#else
+#elif !defined(_DARWIN)
 
 #include "linux-in-mem-exe.h"
 
@@ -115,11 +115,13 @@ int try_open_pty(int *master, int *slave)
 	}
 
 	memset(path, 0, sizeof(path));
+#ifndef _DARWIN
 	if(ptsname_r(lmaster, path, sizeof(path)-2) == -1) {
 		close(lmaster);
 		return -1;
 	}
-
+#endif
+	
 	lslave = open(path, O_RDWR | O_NOCTTY);
 	if(lslave == -1) {
 		close(lmaster);
@@ -597,7 +599,7 @@ DWORD request_sys_process_execute(Remote *remote, Packet *packet)
 	{
 		free( cpDesktop );
 	}
-#else
+#elif !defined(_DARWIN)
 	PCHAR path, arguments;;
 	DWORD flags;
 	char *argv[8], *command_line;
@@ -1090,6 +1092,7 @@ DWORD process_channel_write( Channel *channel, Packet *request,
 DWORD process_channel_close( Channel *channel, Packet *request, LPVOID context )
 {
 	DWORD result = ERROR_SUCCESS;
+#ifndef _DARWIN
 	ProcessChannelContext *ctx = (ProcessChannelContext *)context;
 
 	dprintf( "[PROCESS] process_channel_close. channel=0x%08X, ctx=0x%08X", channel, ctx );
@@ -1108,6 +1111,7 @@ DWORD process_channel_close( Channel *channel, Packet *request, LPVOID context )
 
 		free( ctx );
 	}
+#endif
 	return result;
 }
 
@@ -1213,7 +1217,7 @@ DWORD process_channel_interact(Channel *channel, Packet *request, LPVOID context
 {
 	ProcessChannelContext *ctx = (ProcessChannelContext *)context;
 	DWORD result = ERROR_SUCCESS;
-
+#ifndef _DARWIN
 	dprintf( "[PROCESS] process_channel_interact. channel=0x%08X, ctx=0x%08X, interact=%d", channel, ctx, interact );
 
 	// If the remote side wants to interact with us, schedule the stdout handle
@@ -1228,6 +1232,7 @@ DWORD process_channel_interact(Channel *channel, Packet *request, LPVOID context
 	} else { // Otherwise, pause it
 		result = scheduler_signal_waitable( ctx->pStdout, Pause );
 	}
+#endif
 	return result;
 }
 

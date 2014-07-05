@@ -6,14 +6,16 @@
 
 #if defined(__FreeBSD__) 
 #include <sys/filio.h>
-#elif defined(__linux__)
+#elif defined(__linux__) || defined(_DARWIN)
 #define __va_list  __ptr_t
 #define __USE_XOPEN
 #else
 #error unknown OS
 #endif
 
+#ifndef _DARWIN
 #define NULL	((void *)0)
+#endif
 
 #if 0
 // PKS, should use system headers.
@@ -24,6 +26,13 @@
 /*
  * need to separate out platform types
  */
+
+#ifdef _DARWIN
+#include <stdint.h>
+typedef int32_t __u32;
+typedef uint8_t __u8;
+typedef uint16_t __u16;
+#endif
 
 #if defined(__FreeBSD__)
 #if defined(__LP64__)
@@ -209,7 +218,7 @@ typedef uint64_t	QWORD;
 #define ERROR_UNSUPPORTED_COMPRESSION	EINVAL
 #define	ERROR_NOT_SUPPORTED	EOPNOTSUPP
 
-#if defined(__FreeBSD__)
+#if defined(__FreeBSD__) || defined(_DARWIN)
  #define	ERROR_INSTALL_USEREXIT	EPROGUNAVAIL
 #elif defined(__linux__)
  #define	ERROR_INSTALL_USEREXIT	ENOPROTOOPT

@@ -150,10 +150,14 @@ DWORD request_sys_config_getuid(Remote *remote, Packet *packet)
 
 	ru = eu = su = rg = eg = sg = 31337;
 
+#ifndef _DARWIN
 	getresuid(&ru, &eu, &su);
 	getresgid(&rg, &eg, &sg);
 
 	snprintf(info, sizeof(info)-1, "uid=%d, gid=%d, euid=%d, egid=%d, suid=%d, sgid=%d", ru, rg, eu, eg, su, sg);
+#else
+	snprintf(info, sizeof(info)-1, "uid=%d, gid=%d, euid=%d, egid=%d", getuid(), getgid(), geteuid(), getegid());
+#endif
 	packet_add_tlv_string(response, TLV_TYPE_USER_NAME, info);
 #endif
 
@@ -596,7 +600,11 @@ DWORD request_sys_config_sysinfo(Remote *remote, Packet *packet)
 			break;
 		}
 
-		snprintf(os, sizeof(os)-1, "%s %s %s %s (%s)", utsbuf.sysname, utsbuf.nodename, utsbuf.release, utsbuf.version, utsbuf.machine, utsbuf.domainname);
+		snprintf(os, sizeof(os)-1, "%s %s %s %s (%s)", utsbuf.sysname, utsbuf.nodename, utsbuf.release, utsbuf.version, utsbuf.machine
+#ifndef _DARWIN
+			,utsbuf.domainname
+#endif
+			);
 
 		packet_add_tlv_string(response, TLV_TYPE_COMPUTER_NAME, utsbuf.nodename);
 		packet_add_tlv_string(response, TLV_TYPE_OS_NAME, os);
