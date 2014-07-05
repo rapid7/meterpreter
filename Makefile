@@ -1,4 +1,4 @@
-CC=i686-apple-darwin10-gcc
+
 
 # Used by 'install' target. Change this to wherever your framework checkout is.
 # Doesn't have to be development. Should point to the base directory where
