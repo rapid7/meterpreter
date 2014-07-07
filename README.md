@@ -124,8 +124,7 @@ To build osx meterpreter:
  - Clean object files from old build process using `make clean`
  - Start building using `make osx`
 
-You can install the dylib automatically if metasploit-framework and meterpreter live in the same place by running
-`make install-darwin`
+You can install the dylib automatically if metasploit-framework and meterpreter live in the same place by running `make install-darwin`
 
 
 Testing
