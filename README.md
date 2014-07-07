@@ -113,6 +113,18 @@ sandwich, and come back to a working[1] meterpreter for Linux.
 not considered stable.  It does stuff, but expect occasional problems.
 
 
+Building - Mac OS X
+===================
+You will need:
+ - Apple compiler toolchain
+
+Meterpreter requires libpcap and OpenSSL that must be present in the Library Path where it will be linked dynamically with libmetsrv
+
+To build osx meterpreter:
+ - Clean object files from old build process using `make clean`
+ - Start building using `make osx`
+
+
 Testing
 =======
 
