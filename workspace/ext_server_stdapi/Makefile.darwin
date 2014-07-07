@@ -17,16 +17,9 @@ objects= server/fs/dir.o
 objects+= server/fs/file.o
 objects+= server/fs/fs_util.o
 objects+= server/general.o
-#objects+= server/net/config/interface.o
-#objects+= server/net/config/route.o
-#objects+= server/net/config/arp.o
 objects+= server/net/config/netstat.o
-#objects+= server/net/socket/tcp.o
-#objects+= server/net/socket/tcp_server.o
-#objects+= server/net/socket/udp.o
 objects+= server/stdapi.o
 objects+= server/sys/config/config.o
-#objects+= server/sys/process/linux-in-mem-exe.o
 objects+= server/sys/process/process.o
 objects+= server/sys/process/ps.o
 

@@ -50,10 +50,12 @@ DWORD request_core_loadlib(Remote *remote, Packet *packet)
 		dprintf("targetPath: %s", targetPath);
 
 #ifdef _DARWIN
-		FILE *file = fopen(targetPath,"w");
+		FILE *file = fopen(targetPath, "w");
 		int i;
-		for (i=0; i<dataTlv.header.length; i++)
+		for (i = 0; i < dataTlv.header.length; i++)
+		{
 			fprintf(file, "%c", ((char*)dataTlv.buffer)[i]);
+		}
 		fclose(file);
 
 		library = dlopen(targetPath, RTLD_LAZY);

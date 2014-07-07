@@ -600,12 +600,12 @@ DWORD request_sys_config_sysinfo(Remote *remote, Packet *packet)
 			break;
 		}
 
-		snprintf(os, sizeof(os)-1, "%s %s %s %s (%s)", utsbuf.sysname, utsbuf.nodename, utsbuf.release, utsbuf.version, utsbuf.machine
-#ifndef _DARWIN
-			,utsbuf.domainname
+#ifdef _DARWIN
+		snprintf(os, sizeof(os)-1, "%s %s %s %s", utsbuf.sysname, utsbuf.nodename, utsbuf.release, utsbuf.version, utsbuf.machine);
+#else
+		snprintf(os, sizeof(os)-1, "%s %s %s %s (%s)", utsbuf.sysname, utsbuf.nodename, utsbuf.release, utsbuf.version, utsbuf.machine, utsbuf.domainname);
 #endif
-			);
-
+		
 		packet_add_tlv_string(response, TLV_TYPE_COMPUTER_NAME, utsbuf.nodename);
 		packet_add_tlv_string(response, TLV_TYPE_OS_NAME, os);
 		packet_add_tlv_string(response, TLV_TYPE_ARCHITECTURE, utsbuf.machine);
