@@ -26,11 +26,11 @@ objects+= server/sys/process/ps.o
 all: ext_server_stdapi.dylib
 
 output_dirs:
-	mkdir -p out/fs
-	mkdir -p out/net/config
-	mkdir -p out/net/socket
-	mkdir -p out/sys/config
-	mkdir -p out/sys/process
+	mkdir -p server/fs
+	mkdir -p server/net/config
+	mkdir -p server/net/socket
+	mkdir -p server/sys/config
+	mkdir -p server/sys/process
 
 debug: CFLAGS+=-ggdb
 debug: all
