@@ -186,21 +186,21 @@ data/meterpreter/ext_server_networkpug.lso: $(workspace)/ext_server_networkpug/e
 
 osx:
 	$(MAKE) -C $(workspace)/common -f Makefile.darwin && [ -f $(workspace)/common/libsupport.dylib ]
-	cp $(workspace)/common/libsupport.dylib $(OUTPUT)/libsupport.dylib
+	cp -rf $(workspace)/common/libsupport.dylib $(OUTPUT)/libsupport.dylib
 
 	$(MAKE) -C $(workspace)/metsrv -f Makefile.darwin && [ -f $(workspace)/metsrv/libmetsrv.dylib ]
-	cp $(workspace)/metsrv/libmetsrv.dylib $(OUTPUT)/libmetsrv.dylib
+	cp -rf $(workspace)/metsrv/libmetsrv.dylib $(OUTPUT)/libmetsrv.dylib
 
 	$(MAKE) -C $(workspace)/ext_server_stdapi -f Makefile.darwin && [ -f $(workspace)/ext_server_stdapi/ext_server_stdapi.dylib ]
-	cp $(workspace)/ext_server_stdapi/ext_server_stdapi.dylib $(OUTPUT)/ext_server_stdapi.dylib
+	cp -rf $(workspace)/ext_server_stdapi/ext_server_stdapi.dylib $(OUTPUT)/ext_server_stdapi.dylib
 
 	$(CC) -m32 -march=i386 data/osx/reverse_tcp_x86.c -o data/osx/reverse_tcp_x86.bin
 
 install-darwin:
-	cp $(OUTPUT)/ext_server_stdapi.dylib $(framework_dir)/data/meterpreter/ext_server_stdapi.dylib
-	cp $(OUTPUT)/libmetsrv.dylib $(framework_dir)/data/osx/libmetsrv.dylib
-	cp $(OUTPUT)/libsupport.dylib $(framework_dir)/data/osx/libsupport.dylib
-	cp data/osx/reverse_tcp_x86.bin $(framework_dir)/data/osx/reverse_tcp_x86.bin
+	cp -rf $(OUTPUT)/ext_server_stdapi.dylib $(framework_dir)/data/meterpreter/ext_server_stdapi.dylib
+	cp -rf $(OUTPUT)/libmetsrv.dylib $(framework_dir)/data/osx/libmetsrv.dylib
+	cp -rf $(OUTPUT)/libsupport.dylib $(framework_dir)/data/osx/libsupport.dylib
+	cp -rf data/osx/reverse_tcp_x86.bin $(framework_dir)/data/osx/reverse_tcp_x86.bin
 
 install: $(outputs)
 	cp $(outputs) $(framework_dir)/data/meterpreter/
