@@ -214,6 +214,7 @@ clean:
 	$(MAKE) -C $(workspace)/metsrv -f Makefile.darwin clean
 	$(MAKE) -C $(workspace)/ext_server_stdapi -f Makefile.darwin clean
 	rm -f data/osx/reverse_tcp_x86.bin
+	rm -rf output/*
 
 depclean:
 	rm -f source/bionic/lib*/*.o
