@@ -194,13 +194,13 @@ osx:
 	$(MAKE) -C $(workspace)/ext_server_stdapi -f Makefile.darwin && [ -f $(workspace)/ext_server_stdapi/ext_server_stdapi.dylib ]
 	cp -rf $(workspace)/ext_server_stdapi/ext_server_stdapi.dylib $(OUTPUT)/ext_server_stdapi.dylib
 
-	$(CC) -m32 -march=i386 data/osx/reverse_tcp_x86.c -o data/osx/reverse_tcp_x86.bin
+	$(CC) -m32 -march=i386 data/osx/reverse_tcp_x86.c -o data/osx/osx_reverse_tcp_x86.bin
 
 install-darwin:
 	cp -rf $(OUTPUT)/ext_server_stdapi.dylib $(framework_dir)/data/meterpreter/ext_server_stdapi.dylib
-	cp -rf $(OUTPUT)/libmetsrv.dylib $(framework_dir)/data/osx/libmetsrv.dylib
-	cp -rf $(OUTPUT)/libsupport.dylib $(framework_dir)/data/osx/libsupport.dylib
-	cp -rf data/osx/reverse_tcp_x86.bin $(framework_dir)/data/osx/reverse_tcp_x86.bin
+	cp -rf $(OUTPUT)/libmetsrv.dylib $(framework_dir)/data/meterpreter/libmetsrv.dylib
+	cp -rf $(OUTPUT)/libsupport.dylib $(framework_dir)/data/meterpreter/libsupport.dylib
+	cp -rf data/osx/osx_reverse_tcp_x86.bin $(framework_dir)/data/meterpreter/osx_reverse_tcp_x86.bin
 
 install: $(outputs)
 	cp $(outputs) $(framework_dir)/data/meterpreter/
@@ -213,7 +213,7 @@ clean:
 	$(MAKE) -C $(workspace)/common -f Makefile.darwin clean
 	$(MAKE) -C $(workspace)/metsrv -f Makefile.darwin clean
 	$(MAKE) -C $(workspace)/ext_server_stdapi -f Makefile.darwin clean
-	rm -f data/osx/reverse_tcp_x86.bin
+	rm -f data/osx/osx_reverse_tcp_x86.bin
 	rm -rf output/*
 
 depclean:
