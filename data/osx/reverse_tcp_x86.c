@@ -12,7 +12,7 @@
 #include <dlfcn.h>
 #include <ctype.h>
 
-static char ip_str[] =   "XXXX127.0.0.1           ";
+static char ip_str[] =   "XXXX10.0.0.100          ";
 static char port_str[] = "YYYY4444                ";
 
 char *trim(char *str)
@@ -119,8 +119,8 @@ int main()
         exit(1);
     }
 
-    int libraries_size;
-    read(socket, (char*)&libraries_size, 4);
+    //int libraries_size;
+    //read(socket, (char*)&libraries_size, 4);
     
     int libmetsrv_buffer_size=0, libsupport_buffer_size=0;
     char* libsupport_buffer = get_library(socket, &libsupport_buffer_size);
