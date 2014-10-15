@@ -1,0 +1,44 @@
+VPATH=../../source/extensions/stdapi
+
+OPENSSL=../../source/openssl/include
+COMMON=../../source/common
+SERVER=../../source/server
+
+CFLAGS=-fno-stack-protector 
+CFLAGS+= -fPIC -DPIC -Wall
+CFLAGS+=-I${COMMON} -I${SERVER} -I${OPENSSL} -I${VPATH}/server
+CFLAGS+= -fno-builtin -D_SIZE_T_DECLARED -D_GNU_SOURCE
+CFLAGS+= -D_BYTE_ORDER=_LITTLE_ENDIAN -D_UNIX -D_DARWIN
+CFLAGS+= -I./server -L../../output -lc -lsupport
+
+CFLAGS+= -march=i386 -m32 -Os
+
+objects= server/fs/dir.o
+objects+= server/fs/file.o
+objects+= server/fs/fs_util.o
+objects+= server/general.o
+objects+= server/net/config/netstat.o
+objects+= server/stdapi.o
+objects+= server/sys/config/config.o
+objects+= server/sys/process/process.o
+objects+= server/sys/process/ps.o
+
+all: ext_server_stdapi.dylib
+
+output_dirs:
+	mkdir -p server/fs
+	mkdir -p server/net/config
+	mkdir -p server/net/socket
+	mkdir -p server/sys/config
+	mkdir -p server/sys/process
+
+debug: CFLAGS+=-ggdb
+debug: all
+
+ext_server_stdapi.dylib: output_dirs $(objects)
+	$(CC) -shared -dynamiclib  $(CFLAGS) $(objects) -lcrypto -o $@
+
+.PHONY: clean debug output_dirs
+clean:
+	rm -f *.o *~
+	rm -f $(objects) ext_server_stdapi.dylib

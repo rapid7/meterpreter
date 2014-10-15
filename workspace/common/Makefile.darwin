@@ -1,0 +1,32 @@
+.SUFFIXES: .S .c
+
+SOURCEPATH=../../source/common
+SSL_PATH=../../openssl/include
+XOR_PATH=../../source/common/crypto
+ZLIB_PATH=../../source/common/zlib
+
+CFLAGS= -D_DARWIN -D_UNIX
+CFLAGS+= -D_BYTE_ORDER=_LITTLE_ENDIAN -D_SIZE_T_DECLARED
+CFLAGS+= -fno-builtin
+CFLAGS+= -I$(SOURCEPATH) -I$(XOR_PATH) -I$(ZLIB_PATH) -I$(SSL_PATH)
+CFLAGS+= -march=i386 -m32 -g -fPIC -Os -DPIC
+
+BASEVPATH=../../source/common:../../source/common/crypto:../../source/common/arch/posix:../../source/common/zlib
+VPATH=$(BASEVPATH)
+
+objects = args.o base.o base_dispatch.o base_dispatch_common.o buffer.o \
+	channel.o common.o core.o list.o remote.o thread.o xor.o zlib.o
+
+CFLAGS+= -fno-stack-protector
+CFLAGS+= -I../../source/common/arch/posix
+
+all: libsupport.dylib
+
+libsupport.dylib: $(objects)
+	$(CC) $(CFLAGS) -dynamiclib $(objects) -lc -lssl -lcrypto -o $@
+
+clean:
+	$(RM) -f *.o *.a *.dylib zlib/zlib.o
+
+.PHONY: clean
+

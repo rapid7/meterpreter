@@ -30,18 +30,27 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/select.h>
+
+#ifdef _DARWIN
+#include <machine/endian.h>
+#include <net/if.h>
+#else
 #include <sys/endian.h>
+#include <linux/if.h>
+#include <linux/netlink.h>
+#include <linux/rtnetlink.h>
+#include <sys/atomics.h>
+#endif
+
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <unistd.h>
 
-#include <linux/if.h>
-#include <linux/netlink.h>
-#include <linux/rtnetlink.h>
-
-#include <sys/atomics.h>
-
+#ifdef _DARWIN
+#define __WCLONE 0x80000000
+#endif
+	
 #define FLAGS_LEN 100
 
 typedef struct ___u128 {

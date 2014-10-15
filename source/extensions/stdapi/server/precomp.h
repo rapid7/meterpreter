@@ -23,9 +23,14 @@
  #include <sys/wait.h>
  #include <termios.h>
 
+#ifdef _DARWIN
+ #include <net/if.h>
+ #include <unistd.h>
+#else
  #include <linux/if.h>
  #include <linux/netlink.h>
  #include <linux/elf.h>
+#endif
 
 
 #define IN_ADDR struct in_addr

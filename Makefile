@@ -3,11 +3,12 @@
 # Used by 'install' target. Change this to wherever your framework checkout is.
 # Doesn't have to be development. Should point to the base directory where
 # msfconsole lives.
-framework_dir = ../metasploit-framework/
+framework_dir = ../metasploit-framework
 
 # Change me if you want to build openssl and libpcap somewhere else
 build_tmp = posix-meterp-build-tmp
 
+OUTPUT=output
 ROOT=$(basename $(CURDIR:%/=%))
 BIONIC=$(ROOT)/source/bionic
 LIBC=$(BIONIC)/libc
@@ -184,6 +185,23 @@ $(workspace)/ext_server_networkpug/ext_server_networkpug.so:
 data/meterpreter/ext_server_networkpug.lso: $(workspace)/ext_server_networkpug/ext_server_networkpug.so
 	cp $(workspace)/ext_server_networkpug/ext_server_networkpug.so data/meterpreter/ext_server_networkpug.lso
 
+osx:
+	$(MAKE) -C $(workspace)/common -f Makefile.darwin && [ -f $(workspace)/common/libsupport.dylib ]
+	cp -rf $(workspace)/common/libsupport.dylib $(OUTPUT)/libsupport.dylib
+
+	$(MAKE) -C $(workspace)/metsrv -f Makefile.darwin && [ -f $(workspace)/metsrv/libmetsrv.dylib ]
+	cp -rf $(workspace)/metsrv/libmetsrv.dylib $(OUTPUT)/libmetsrv.dylib
+
+	$(MAKE) -C $(workspace)/ext_server_stdapi -f Makefile.darwin && [ -f $(workspace)/ext_server_stdapi/ext_server_stdapi.dylib ]
+	cp -rf $(workspace)/ext_server_stdapi/ext_server_stdapi.dylib $(OUTPUT)/ext_server_stdapi.dylib
+
+	$(CC) -m32 -march=i386 data/osx/reverse_tcp_x86.c -o data/osx/osx_reverse_tcp_x86.bin
+
+install-darwin:
+	cp -rf $(OUTPUT)/ext_server_stdapi.dylib $(framework_dir)/data/meterpreter/ext_server_stdapi.dylib
+	cp -rf $(OUTPUT)/libmetsrv.dylib $(framework_dir)/data/meterpreter/libmetsrv.dylib
+	cp -rf $(OUTPUT)/libsupport.dylib $(framework_dir)/data/meterpreter/libsupport.dylib
+	cp -rf data/osx/osx_reverse_tcp_x86.bin $(framework_dir)/data/meterpreter/osx_reverse_tcp_x86.bin
 
 install: $(outputs)
 	cp $(outputs) $(framework_dir)/data/meterpreter/
@@ -192,6 +210,12 @@ clean:
 	rm -f $(objects)
 	make -C source/server/rtld/ clean
 	make -C $(workspace) clean
+
+	$(MAKE) -C $(workspace)/common -f Makefile.darwin clean
+	$(MAKE) -C $(workspace)/metsrv -f Makefile.darwin clean
+	$(MAKE) -C $(workspace)/ext_server_stdapi -f Makefile.darwin clean
+	rm -f data/osx/osx_reverse_tcp_x86.bin
+	rm -rf output/*
 
 depclean:
 	rm -f source/bionic/lib*/*.o
