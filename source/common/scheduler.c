@@ -7,11 +7,7 @@
 typedef struct _WaitableEntry
 {
 	Remote *               remote;
-#ifdef _WIN32
 	HANDLE                 waitable;
-#else
-	int                    waitable;
-#endif
 	EVENT*                 pause;
 	EVENT*                 resume;
 	LPVOID                 context;
@@ -173,11 +169,7 @@ DWORD scheduler_signal_waitable( HANDLE waitable, SchedularSignal signal )
 
 	dprintf( "[SCHEDULER] entering scheduler_signal_waitable( 0x%08X )", waitable );
 
-#ifdef _WIN32
-	if( schedulerThreadList == NULL || waitable == NULL )
-#else
-	if( schedulerThreadList == NULL || waitable == 0 )
-#endif
+	if( schedulerThreadList == NULL || !waitable )
 		return ERROR_INVALID_HANDLE;
 
 	lock_acquire( schedulerThreadList->lock );
@@ -330,14 +322,11 @@ DWORD THREADCALL scheduler_waitable_thread( THREAD * thread )
 	
 	// we acquire the lock for this block as we are freeing 'entry' which may be accessed 
 	// in a second call to scheduler_signal_waitable for this thread (unlikely but best practice).
-#ifndef _WIN32
-	dprintf( "[SCHEDULER] attempting to remove thread( 0x%08X )", thread );
-#endif
 	lock_acquire( schedulerThreadList->lock );
 	if( list_remove( schedulerThreadList, thread ) )
 	{
 		if( entry->destroy ) {
-			entry->destroy( entry->waitable, entry->context, (LPVOID)thread->parameter2 );
+			entry->destroy( entry->waitable, entry->context, thread->parameter2 );
 		}
 		else if( entry->waitable ) {
 			dprintf( "[SCHEDULER] scheduler_waitable_thread( 0x%08X ) closing handle 0x%08X", thread, entry->waitable);
@@ -347,13 +336,7 @@ DWORD THREADCALL scheduler_waitable_thread( THREAD * thread )
 			close( entry->waitable );
 #endif
 		}
-
-#ifndef _WIN32
-		dprintf( "[SCHEDULER] cleaning up resume thread( 0x%08X )", thread );
-		dprintf( "[SCHEDULER] cleaning up pause thread( 0x%08X )", thread );
-		dprintf( "[SCHEDULER] cleaning up thread( 0x%08X )", thread );
 		dprintf( "[SCHEDULER] cleaning up entry( 0x%08X )", thread );
-#endif
 		event_destroy( entry->resume );
 		event_destroy( entry->pause );
 		thread_destroy( thread );
