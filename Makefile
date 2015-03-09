@@ -53,8 +53,8 @@ workspace = workspace
 
 all: $(objects) $(outputs)
 
-include Makefile.ossl
-include Makefile.pcap
+include deps/libressl/Makefile
+include deps/libpcap/Makefile
 
 debug: DEBUG=true
 # I'm 99% sure this is the wrong way to do this
