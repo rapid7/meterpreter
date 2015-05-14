@@ -10,9 +10,14 @@
 #include <stdlib.h>
 
 // TLVs
+// Output
 #define TLV_TYPE_EXTENSION_PAGEANTJACKER_STATUS		  1
 #define TLV_TYPE_EXTENSION_PAGEANTJACKER_ERRORMESSAGE 1<<1
 #define TLV_TYPE_EXTENSION_PAGEANTJACKER_RETURNEDBLOB 1<<2
+
+// Input
+#define TLV_TYPE_EXTENSION_PAGEANTJACKER_SIZE_IN 1<<3
+#define TLV_TYPE_EXTENSION_PAGEANTJACKER_BLOB_IN 1<<4
 
 // Results from the pageant query function
 typedef struct __PAGEANTQUERYRESULTS {
@@ -28,6 +33,10 @@ typedef struct __PAGEANTQUERYRESULTS {
 #define PAGEANTJACKER_ERROR_MAPVIEWOFFILE "Unable to obtain IPC memory address."
 #define PAGEANTJACKER_ERROR_CREATEFILEMAPPING "Unable to allocate memory for Pageant<-->Meterpreter IPC."
 #define PAGEANTJACKER_ERROR_ALLOC "Unable to allocate memory buffer."
+#define PAGEANTJACKER_ERROR_REQSTRINGBUILD "Unable to build Pageant request string."
+#define PAGEANTJACKER_ERROR_NOERROR = "No error."
+#define PAGEANTJACKER_ERROR_NOTFOUND = "Pageant not found."
+#define PAGEANTJACKER_ERROR_GENERIC = "Error interacting with Pageant."
 
 #define AGENT_MAX 8192
 #define AGENT_COPYDATA_ID 0x804e50ba 
