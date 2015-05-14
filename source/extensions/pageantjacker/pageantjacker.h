@@ -28,6 +28,7 @@ typedef struct __PAGEANTQUERYRESULTS {
 	BOOL result;
 	unsigned char *error_message;
 	byte *blob;
+	unsigned int bloblength;
 } PAGEANTQUERYRESULTS;
 
 // Class and window name
@@ -48,11 +49,6 @@ typedef struct __PAGEANTQUERYRESULTS {
 PAGEANTQUERYRESULTS send_query_to_pageant(byte *query, unsigned int querylength);
 DWORD request_pageant_send_query(Remote *remote, Packet *packet);
 
-
-
-#endif
-
-
 #define DEBUGTRACE 1
 #ifdef DEBUGTRACE
 #define dprintf(...) real_dprintf(__VA_ARGS__)
@@ -65,3 +61,7 @@ DWORD request_pageant_send_query(Remote *remote, Packet *packet);
 #define dprintf(...) do{}while(0);
 #define vdprintf(...) do{}while(0);
 #endif
+
+#endif
+
+
