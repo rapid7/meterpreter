@@ -34,9 +34,8 @@ typedef struct __PAGEANTQUERYRESULTS {
 #define PAGEANTJACKER_ERROR_CREATEFILEMAPPING "Unable to allocate memory for Pageant<-->Meterpreter IPC."
 #define PAGEANTJACKER_ERROR_ALLOC "Unable to allocate memory buffer."
 #define PAGEANTJACKER_ERROR_REQSTRINGBUILD "Unable to build Pageant request string."
-#define PAGEANTJACKER_ERROR_NOERROR = "No error."
-#define PAGEANTJACKER_ERROR_NOTFOUND = "Pageant not found."
-#define PAGEANTJACKER_ERROR_GENERIC = "Error interacting with Pageant."
+#define PAGEANTJACKER_ERROR_NOERROR "No error."
+#define PAGEANTJACKER_ERROR_NOTFOUND "Pageant not found."
 
 #define AGENT_MAX 8192
 #define AGENT_COPYDATA_ID 0x804e50ba 
