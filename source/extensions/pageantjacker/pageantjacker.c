@@ -34,17 +34,8 @@ DWORD request_pageant_send_query(Remote *remote, Packet *packet)
 	dprintf("[PJ(request_pageant_send_query)] Size in: %d. Data is at 0x%p", raw_data_size_in, raw_data_in);
 
 	// Interact with Pageant. Note that this will always return a struct, even if the operation failed.
-	if (raw_data_size_in) {
-		dprintf("[PJ(request_pageant_send_query)] Forwarding query to Pageant");
-		results = send_query_to_pageant(raw_data_in, raw_data_size_in);
-	} else {
-		results.result = TRUE;
-		results.error_message = PAGEANTJACKER_ERROR_NOTFORWARDED;
-		results.bloblength = 9;
-		results.blob = malloc(results.bloblength);
-		memcpy(results.blob, "\x00\x00\x00\x01\x05\x00\x00\x00\x00", results.bloblength);
-		dprintf("[PJ(request_pageant_send_query)] Not forwarding query to Pageant");
-	}
+	dprintf("[PJ(request_pageant_send_query)] Forwarding query to Pageant");
+	results = send_query_to_pageant(raw_data_in, raw_data_size_in);
 
 	// Build the packet based on the respones from the Pageant interaction.
 	packet_add_tlv_bool(response, TLV_TYPE_EXTENSION_PAGEANTJACKER_STATUS, results.result);
