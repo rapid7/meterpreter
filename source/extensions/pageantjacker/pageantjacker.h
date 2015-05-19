@@ -50,19 +50,6 @@ typedef struct __PAGEANTQUERYRESULTS {
 PAGEANTQUERYRESULTS send_query_to_pageant(byte *query, unsigned int querylength);
 DWORD request_pageant_send_query(Remote *remote, Packet *packet);
 
-#define DEBUGTRACE 1
-#ifdef DEBUGTRACE
-#define dprintf(...) real_dprintf(__VA_ARGS__)
-#if DEBUGTRACE == 1
-#define vdprintf dprintf
-#else
-#define vdprintf(...) do{}while(0);
-#endif
-#else
-#define dprintf(...) do{}while(0);
-#define vdprintf(...) do{}while(0);
-#endif
-
 #endif
 
 
