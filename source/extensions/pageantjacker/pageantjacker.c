@@ -92,7 +92,7 @@ DWORD __declspec(dllexport) GetExtensionName(char* buffer, int bufferSize)
 
 PAGEANTQUERYRESULTS send_query_to_pageant(byte *query, unsigned int querylength) {
 
-	char strPuttyRequest[23]; // This will always be 23 chars
+	char strPuttyRequest[PAGENT_REQUEST_LENGTH]; // This will always be 23 chars
 	COPYDATASTRUCT pageant_copy_data;
 	unsigned char *filemap_pointer;
 	HANDLE filemap;

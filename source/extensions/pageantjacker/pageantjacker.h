@@ -10,9 +10,6 @@
 #include <stdlib.h>
 
 // TLVs
-// Output
-
-
 #define TLV_TYPE_EXTENSION_PAGEANTJACKER 0
 
 #define TLV_TYPE_EXTENSION_PAGEANTJACKER_STATUS		  MAKE_CUSTOM_TLV(TLV_META_TYPE_BOOL, TLV_TYPE_EXTENSION_PAGEANTJACKER, TLV_EXTENSIONS + 1)
@@ -45,6 +42,7 @@ typedef struct __PAGEANTQUERYRESULTS {
 
 #define AGENT_MAX 8192
 #define AGENT_COPYDATA_ID 0x804e50ba 
+#define PAGENT_REQUEST_LENGTH 23
 
 // Function definitions
 PAGEANTQUERYRESULTS send_query_to_pageant(byte *query, unsigned int querylength);
