@@ -194,8 +194,11 @@ struct sockaddr_in *peername4;
 struct sockaddr_in6 *peername6;
 
 /* mutex */
+#ifdef _WIN32
+CRITICAL_SECTION snifferm;
+#else
 LOCK *snifferm;
-
+#endif
 #define SNIFFER_MAX_INTERFACES 128 // let's hope interface index don't go above this value
 #define SNIFFER_MAX_QUEUE  200000 // ~290Mb @ 1514 bytes
 
@@ -364,7 +367,7 @@ void sniffer_handler(u_char *user, const struct pcap_pkthdr *h, const u_char *by
 
 	if(! j->active)
 	{
-		dprintf("calling pcap_breakloop because job is no longer active");
+		dprintf("sniffer>> sniffer_handler() calling pcap_breakloop because job is no longer active");
 		pcap_breakloop(j->pcap);
 		return;
 	}
@@ -372,7 +375,7 @@ void sniffer_handler(u_char *user, const struct pcap_pkthdr *h, const u_char *by
 	pkt = calloc(sizeof(PeterPacket) + h->caplen, 1);
 	if(! pkt)
 	{
-		dprintf("ho hum, no memory. maybe a pcap_breakloop / stop running?");
+		dprintf("sniffer>> sniffer_handler() ho hum, no memory. maybe a pcap_breakloop / stop running?");
 		return;
 	}
 
@@ -403,7 +406,7 @@ void sniffer_handler(u_char *user, const struct pcap_pkthdr *h, const u_char *by
 
 	lock_release(snifferm);
 
-	dprintf("new packet inserted. now pkts %d / bytes %d", j->cur_pkts, j->cur_bytes);
+	dprintf("sniffer>> sniffer_handler() new packet inserted. now pkts %d / bytes %d", j->cur_pkts, j->cur_bytes);
 
 }
 
@@ -446,7 +449,6 @@ DWORD sniffer_thread(THREAD *thread)
 #endif
 		count = pcap_dispatch(j->pcap, 100, sniffer_handler, (u_char *)(j));
 		dprintf("sniffer>> sniffer_thread()  count %d\n", count);
-		j->active = 0;
 
 		if (-1 == count)
 		{
@@ -533,7 +535,7 @@ DWORD request_sniffer_capture_start(Remote *remote, Packet *packet)
 		if(!j->pcap)
 		{
 			dprintf("sniffer>> start_capture() interface acquisition failed: %s\n", errbuf);
-			result = EACCES;
+			result = ERROR_ACCESS_DENIED;
 			break;
 		}
 #ifdef _WIN32
@@ -1038,7 +1040,11 @@ DWORD InitServerExtension(Remote *remote)
 	}
 
 	dprintf("[SERVER] Creating a lock...");
+#ifdef _WIN32
+	InitializeCriticalSection(&snifferm);
+#else
 	snifferm = lock_create();
+#endif
 
 	if(peername4 || peername6) {
 		int port;

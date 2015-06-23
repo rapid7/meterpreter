@@ -16,7 +16,10 @@
 #pragma comment(lib , "ws2_32.lib") //For winsock
 #pragma comment(lib , "wpcap.lib") //For winpcap
 
-#include <errno.h>
+// #include <errno.h>
+#define lock_acquire(sm) EnterCriticalSection(&sm)
+#define lock_release(sm) LeaveCriticalSection(&sm)
+#define lock_destroy(sm) DeleteCriticalSection(&sm)
 #endif
 
 #ifndef ERROR_ACCESS_DENIED
