@@ -8,6 +8,8 @@
 /*! @brief Set to 0 for "normal", and 1 to "verbose", comment out to disable completely. */
 //#define DEBUGTRACE 0
 
+#define DEBUGTRACE 1
+#define DEBUGTRACE_FILENAME "C:\\Windows\\Temp\\metdebugtrace.txt"
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
@@ -72,6 +74,7 @@ typedef struct ___u128 {
     __u32 a4;
 }__u128;
 
+
 struct iface_address {
 	int family;
 	union {
@@ -130,6 +133,7 @@ struct routing_table {
 	struct ipv6_routing_table ** table_ipv6;
 };
 
+
 struct arp_entry {
 	__u32  ipaddr;
 	unsigned char hwaddr[6];
@@ -140,8 +144,6 @@ struct arp_table {
 	int entries;
 	struct arp_entry table[0];
 };
-
-
 
 int netlink_get_routing_table(struct ipv4_routing_table **table_ipv4, struct ipv6_routing_table **table_ipv6);
 int netlink_get_interfaces(struct ifaces_list **iface_list);
@@ -225,6 +227,12 @@ static _inline void real_dprintf(char *format, ...)
 	vsnprintf_s(buffer + len, sizeof(buffer)-len, sizeof(buffer)-len - 3, format, args);
 	strcat_s(buffer, sizeof(buffer), "\r\n");
 	OutputDebugStringA(buffer);
+#ifdef DEBUGTRACE_FILENAME
+	FILE *lFile;
+	lFile = fopen(DEBUGTRACE_FILENAME, "a+");
+	fprintf(lFile, "%s\n", buffer);
+	fclose(lFile);
+#endif
 }
 
 #endif
