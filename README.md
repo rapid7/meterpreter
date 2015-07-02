@@ -1,4 +1,14 @@
-Current `master` branch: ![Meterpreter Build Status][build_icon]
+# This repository has been merged into metasploit-payloads
+
+Please note that this repository has been merged into a unified repository for
+meterpreters: https://github.com/rapid7/metasploit-payloads
+
+The history has been preserved, along with prehistory from metasploit-framework:
+https://github.com/rapid7/metasploit-payloads/tree/master/c/meterpreter
+
+If you have any local branches, please rebase them on the new repository. See
+https://github.com/rapid7/meterpreter/issues/110 for discussion of why we
+merged these repositories back together.
 
 meterpreter >
 =============
