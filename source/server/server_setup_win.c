@@ -133,6 +133,10 @@ static Transport* create_transport(Remote* remote, MetsrvTransportCommon* transp
 	// share the lock with the transport
 	transport->lock = remote->lock;
 
+	// assign a unique id to this transport
+	static UINT transport_id = 1;
+	transport->transport_id = transport_id++;
+
 	return transport;
 }
 

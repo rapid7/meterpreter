@@ -145,6 +145,7 @@ typedef enum
 	TLV_TYPE_MIGRATE_SOCKET_PATH = TLV_VALUE(TLV_META_TYPE_STRING,    409),   ///! Represents a unix domain socket path, used to migrate on linux (string)
 
 	// Transport switching
+	TLV_TYPE_TRANS_ID            = TLV_VALUE(TLV_META_TYPE_UINT,      429),   ///! Represents the unique identifier for the transport.
 	TLV_TYPE_TRANS_TYPE          = TLV_VALUE(TLV_META_TYPE_UINT,      430),   ///! Represents the type of transport to switch to.
 	TLV_TYPE_TRANS_URL           = TLV_VALUE(TLV_META_TYPE_STRING,    431),   ///! Represents the new URL of the transport to use.
 	TLV_TYPE_TRANS_UA            = TLV_VALUE(TLV_META_TYPE_STRING,    432),   ///! Represents the user agent (for http).

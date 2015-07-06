@@ -203,6 +203,8 @@ DWORD remote_request_core_transport_list(Remote* remote, Packet* packet)
 				break;
 			}
 
+			dprintf("[DISPATCH] Adding transport ID %u", current->transport_id);
+			packet_add_tlv_uint(transportGroup, TLV_TYPE_TRANS_ID, current->transport_id);
 			dprintf("[DISPATCH] Adding URL %S", current->url);
 			packet_add_tlv_wstring(transportGroup, TLV_TYPE_TRANS_URL, current->url);
 			dprintf("[DISPATCH] Adding Comms timeout %u", current->timeouts.comms);
@@ -307,11 +309,11 @@ DWORD remote_request_core_transport_remove(Remote* remote, Packet* packet)
 	{
 		Transport* found = NULL;
 		Transport* transport = remote->transport;
-		wchar_t* transportUrl = packet_get_tlv_value_wstring(packet, TLV_TYPE_TRANS_URL);
+		UINT transport_id = packet_get_tlv_value_uint(packet, TLV_TYPE_TRANS_ID);
 
 		do
 		{
-			if (wcscmp(transportUrl, transport->url) == 0)
+			if (transport_id == transport->transport_id)
 			{
 				found = transport;
 				break;
@@ -332,8 +334,6 @@ DWORD remote_request_core_transport_remove(Remote* remote, Packet* packet)
 			remote->trans_remove(remote, found);
 			dprintf("[DISPATCH] Transport removed");
 		}
-
-		SAFE_FREE(transportUrl);
 	}
 
 	packet_transmit_empty_response(remote, packet, result);
