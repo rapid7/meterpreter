@@ -49,7 +49,7 @@ typedef struct _MetsrvTransportHttp
 {
 	MetsrvTransportCommon common;
 	MetsrvTransportProxy proxy;
-	CHARTYPE ua[256];                     ///! User agent string.
+	CHARTYPE ua[UA_SIZE];                 ///! User agent string.
 	BYTE ssl_cert_hash[CERT_HASH_SIZE];   ///! Expected SSL certificate hash.
 } MetsrvTransportHttp;
 

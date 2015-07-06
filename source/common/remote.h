@@ -79,6 +79,7 @@ typedef struct _HttpTransportContext
 
 typedef struct _Transport
 {
+	UINT transport_id;                    ///! The unique identifier for this transport.
 	DWORD type;                           ///! The type of transport in use.
 	PTransportGetSocket get_socket;       ///! Function to get the socket from the transport.
 	PTransportReset transport_reset;      ///! Function to reset/clean the transport ready for restarting.
