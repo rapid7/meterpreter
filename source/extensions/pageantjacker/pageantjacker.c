@@ -115,7 +115,7 @@ void send_query_to_pageant(byte *query, unsigned int querylength, PAGEANTQUERYRE
 		dprintf("[PJ(send_query_to_pageant)] Pageant Handle is %x",hPageant);
 
 		// Generate the request string and populate the struct
-		if (_snprintf_s((char *)&strPuttyRequest, sizeof(strPuttyRequest), _TRUNCATE, "PageantRequest%08x", (unsigned int)GetCurrentThreadId())) { 
+		if (_snprintf_s(&strPuttyRequest, sizeof(strPuttyRequest), _TRUNCATE, "PageantRequest%08x", (unsigned int)GetCurrentThreadId())) { 
 			pageant_copy_data.dwData = AGENT_COPYDATA_ID;
 			pageant_copy_data.cbData = sizeof(strPuttyRequest);
 			pageant_copy_data.lpData = &strPuttyRequest;
