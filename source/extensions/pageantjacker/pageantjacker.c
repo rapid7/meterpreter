@@ -98,13 +98,13 @@ DWORD __declspec(dllexport) GetExtensionName(char* buffer, int bufferSize)
 void send_query_to_pageant(byte *query, unsigned int querylength, PAGEANTQUERYRESULTS *ret) {
 
 	char strPuttyRequest[PAGENT_REQUEST_LENGTH] = { 0 }; // This will always be 23 chars. Initialised to zero here = no memset()
-	COPYDATASTRUCT pageant_copy_data;
-	unsigned char *filemap_pointer = NULL;
+	COPYDATASTRUCT pageantCopyData;
+	unsigned char *filemapPointer = NULL;
 	HANDLE filemap = NULL;
 	HWND hPageant = NULL;
-	unsigned int protocol_return_length = NULL;
-	unsigned int api_result = NULL;
-	void *memcpy_result = NULL;
+	unsigned int protocolReturnLength = NULL;
+	unsigned int apiResult = NULL;
+	void *memcpyResult = NULL;
 
 	// Initialise the results arrays
 	ret->result = FALSE;
@@ -116,40 +116,40 @@ void send_query_to_pageant(byte *query, unsigned int querylength, PAGEANTQUERYRE
 
 		// Generate the request string and populate the struct
 		if (_snprintf_s(&strPuttyRequest, sizeof(strPuttyRequest), _TRUNCATE, "PageantRequest%08x", (unsigned int)GetCurrentThreadId())) { 
-			pageant_copy_data.dwData = AGENT_COPYDATA_ID;
-			pageant_copy_data.cbData = sizeof(strPuttyRequest);
-			pageant_copy_data.lpData = &strPuttyRequest;
-			dprintf("[PJ(send_query_to_pageant)] Request string is at 0x%p (%s)", &pageant_copy_data.lpData, pageant_copy_data.lpData);
+			pageantCopyData.dwData = AGENT_COPYDATA_ID;
+			pageantCopyData.cbData = sizeof(strPuttyRequest);
+			pageantCopyData.lpData = &strPuttyRequest;
+			dprintf("[PJ(send_query_to_pageant)] Request string is at 0x%p (%s)", &pageantCopyData.lpData, pageantCopyData.lpData);
 
 			// Pageant effectively communicates with PuTTY using shared memory (in this case, a pagefile backed memory allocation).
 			// It will overwrite this memory block with the result of the query.
 			filemap = CreateFileMappingA(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, AGENT_MAX, (char *) &strPuttyRequest);
 			if (filemap && filemap != INVALID_HANDLE_VALUE) {
 				dprintf("[PJ(send_query_to_pageant)] CreateFileMappingA returned 0x%x", filemap);
-				if (filemap_pointer = MapViewOfFile(filemap, FILE_MAP_WRITE, 0, 0, 0)) {
-					dprintf("[PJ(send_query_to_pageant)] MapViewOfFile returned 0x%x", filemap_pointer);
+				if (filemapPointer = MapViewOfFile(filemap, FILE_MAP_WRITE, 0, 0, 0)) {
+					dprintf("[PJ(send_query_to_pageant)] MapViewOfFile returned 0x%x", filemapPointer);
 
 					// Initialise and copy the request to the memory block that will be passed to Pageant.
-					SecureZeroMemory(filemap_pointer, AGENT_MAX);
+					SecureZeroMemory(filemapPointer, AGENT_MAX);
 					if (querylength)
-						memcpy(filemap_pointer, query, querylength);
+						memcpy(filemapPointer, query, querylength);
 
-					dprintf("[PJ(send_query_to_pageant)] Request length: %d. Query buffer preview: %02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X. Request buffer preview: %02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X", querylength, query[0], query[1], query[2], query[3], query[4], query[5], query[6], query[7], filemap_pointer[0], filemap_pointer[1], filemap_pointer[2], filemap_pointer[3], filemap_pointer[4], filemap_pointer[5], filemap_pointer[6], filemap_pointer[7]);
+					dprintf("[PJ(send_query_to_pageant)] Request length: %d. Query buffer preview: %02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X. Request buffer preview: %02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X", querylength, query[0], query[1], query[2], query[3], query[4], query[5], query[6], query[7], filemapPointer[0], filemapPointer[1], filemapPointer[2], filemapPointer[3], filemapPointer[4], filemapPointer[5], filemapPointer[6], filemapPointer[7]);
 					
 					// Send the request message to Pageant.
 					dprintf("[PJ(send_query_to_pageant)] Ready to send WM_COPYDATA");
-					if (SendMessage(hPageant, WM_COPYDATA, (WPARAM) NULL, (LPARAM) &pageant_copy_data)) {
+					if (SendMessage(hPageant, WM_COPYDATA, (WPARAM) NULL, (LPARAM) &pageantCopyData)) {
 
-						protocol_return_length = get_length_response(filemap_pointer)+4;
-						dprintf("[PJ(send_query_to_pageant)] Result length: %d. Result buffer preview: %02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X", protocol_return_length, filemap_pointer[0], filemap_pointer[1], filemap_pointer[2], filemap_pointer[3], filemap_pointer[4], filemap_pointer[5], filemap_pointer[6], filemap_pointer[7]);
-						if (protocol_return_length && protocol_return_length<AGENT_MAX) {
-							if (ret->blob = calloc(1, protocol_return_length)) {
-								memcpy_result = memcpy(ret->blob, filemap_pointer, protocol_return_length);
-								ret->bloblength = protocol_return_length;
+						protocolReturnLength = get_length_response(filemapPointer)+4;
+						dprintf("[PJ(send_query_to_pageant)] Result length: %d. Result buffer preview: %02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X", protocolReturnLength, filemapPointer[0], filemapPointer[1], filemapPointer[2], filemapPointer[3], filemapPointer[4], filemapPointer[5], filemapPointer[6], filemapPointer[7]);
+						if (protocolReturnLength && protocolReturnLength<AGENT_MAX) {
+							if (ret->blob = calloc(1, protocolReturnLength)) {
+								memcpyResult = memcpy(ret->blob, filemapPointer, protocolReturnLength);
+								ret->bloblength = protocolReturnLength;
 								ret->result = TRUE;
-								dprintf("[PJ(send_query_to_pageant)] Set Result to TRUE, copied memory to ret.blob (result: 0x%x)",memcpy_result);
+								dprintf("[PJ(send_query_to_pageant)] Set Result to TRUE, copied memory to ret.blob (result: 0x%x)",memcpyResult);
 							} else {
-								dprintf("[PJ(send_query_to_pageant)] Malloc error (length: %d).", protocol_return_length);
+								dprintf("[PJ(send_query_to_pageant)] Malloc error (length: %d).", protocolReturnLength);
 								ret->errorMessage = PAGEANTJACKER_ERROR_ALLOC;
 							}
 						}
@@ -157,14 +157,14 @@ void send_query_to_pageant(byte *query, unsigned int querylength, PAGEANTQUERYRE
 						// SendMessage failed
 						ret->errorMessage = PAGEANTJACKER_ERROR_SENDMESSAGE;
 					 }
-					 api_result = UnmapViewOfFile(filemap_pointer);
-					 dprintf("[PJ(send_query_to_pageant)] UnmapViewOfFile returns %d.", api_result);
+					 apiResult = UnmapViewOfFile(filemapPointer);
+					 dprintf("[PJ(send_query_to_pageant)] UnmapViewOfFile returns %d.", apiResult);
 				} else {
 					// MapViewOfFile failed
 					ret->errorMessage = PAGEANTJACKER_ERROR_MAPVIEWOFFILE;
 				}
-				api_result = CloseHandle(filemap);
-				dprintf("[PJ(send_query_to_pageant)] CloseHandle (from CreateFileMapping) returns %d.", api_result);
+				apiResult = CloseHandle(filemap);
+				dprintf("[PJ(send_query_to_pageant)] CloseHandle (from CreateFileMapping) returns %d.", apiResult);
 			} else {
 				// CreateFileMapping failed
 				ret->errorMessage = PAGEANTJACKER_ERROR_CREATEFILEMAPPING;
