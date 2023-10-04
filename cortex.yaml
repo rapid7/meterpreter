@@ -1,0 +1,16 @@
+---
+info:
+  title: Meterpreter
+  description: THIS REPO IS OBSOLETE. USE https://github.com/rapid7/metasploit-payloads
+    INSTEAD
+  x-cortex-git:
+    github:
+      alias: r7org
+      repository: rapid7/meterpreter
+  x-cortex-tag: meterpreter
+  x-cortex-type: service
+  x-cortex-domain-parents:
+  - tag: metasploit
+openapi: 3.0.1
+servers:
+- url: "/"
